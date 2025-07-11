@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-gradient fw-bold">Upload New Content</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+
+                <div class="mb-3">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">Title</label>
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.desc.id_for_label }}" class="form-label">Description</label>
+                    {{ form.desc }}
+                    {{ form.desc.errors }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.content_type.id_for_label }}" class="form-label">Content Type</label>
+                    {{ form.content_type }}
+                    {{ form.content_type.errors }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.tags.id_for_label }}" class="form-label">Tags (comma separated)</label>
+                    {{ form.tags }}
+                    {{ form.tags.errors }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.file.id_for_label }}" class="form-label">Upload File</label>
+                    {{ form.file }}
+                    {{ form.file.errors }}
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'content_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

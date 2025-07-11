@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="text-gradient fw-bold">{{ item.name }}</h2>
+        <a href="{% url 'content_list' %}" class="btn btn-outline-primary rounded-pill">← Back to List</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <p class="text-muted mb-1">
+                        <i class="far fa-calendar-alt me-1"></i> {{ item.date|date:"M d, Y" }}
+                        {% if item.author %}
+                            <span class="ms-3">
+                                <i class="fas fa-user me-1"></i>{{ item.author.username }}
+                            </span>
+                        {% endif %}
+                    </p>
+                    <p class="text-muted mb-1">
+                        <i class="fas fa-layer-group me-1"></i> {{ item.get_content_type_display }}
+                        {% if item.download_count %}
+                            <span class="ms-3">
+                                <i class="fas fa-download me-1"></i> {{ item.download_count }} Downloads
+                            </span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-3"><strong>Rating:</strong> {{ item.rate|floatformat:1 }} <i class="fas fa-star text-warning"></i></p>
+                </div>
+            </div>
+
+            <p class="lead">{{ item.desc }}</p>
+
+            <div class="mb-3">
+                {% for tag in item.tag_list.split "," %}
+                <span class="badge bg-light text-dark me-1">{{ tag|trim }}</span>
+                {% endfor %}
+            </div>
+
+            {% if item.file %}
+            <a href="{{ item.file.url }}" class="btn btn-primary mt-3" download="{{ item.file.name }}">
+                <i class="fas fa-download me-1"></i> Download File
+            </a>
+            {% else %}
+            <div class="alert alert-warning mt-3">
+                <i class="fas fa-ban me-2"></i>No file available for this content.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

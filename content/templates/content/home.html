@@ -1,0 +1,239 @@
+{% extends "layout.html" %}
+{% block content %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/data.css' %}">
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="display-5 fw-bold text-gradient">Study Resources Hub</h2>
+        <a href="{% url 'content_create' %}" class="btn btn-primary rounded-pill px-4">
+            <i class="fas fa-plus me-2"></i>Upload Content
+        </a>
+    </div>
+    
+    <!-- Search and Filter Bar -->
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body p-3">
+            <form method="GET" action="">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" name="search" class="form-control border-start-0" 
+                                   placeholder="Search content..." value="{{ request.GET.search }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="content_type" class="form-select">
+                            <option value="">All Types</option>
+                            <option value="prac" {% if request.GET.content_type == 'prac' %}selected{% endif %}>Practical</option>
+                            <option value="note" {% if request.GET.content_type == 'note' %}selected{% endif %}>Notes</option>
+                            <option value="ass" {% if request.GET.content_type == 'ass' %}selected{% endif %}>Assignment</option>
+                            <option value="project" {% if request.GET.content_type == 'project' %}selected{% endif %}>Project</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="sort_by" class="form-select">
+                            <option value="date" {% if request.GET.sort_by == 'date' %}selected{% endif %}>Newest First</option>
+                            <option value="-rate" {% if request.GET.sort_by == '-rate' %}selected{% endif %}>Highest Rated</option>
+                            <option value="-download_count" {% if request.GET.sort_by == '-download_count' %}selected{% endif %}>Most Downloaded</option>
+                            <option value="name" {% if request.GET.sort_by == 'name' %}selected{% endif %}>Name A-Z</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-sm btn-outline-primary me-2">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                        <a href="{% url 'content_list' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for item in data %}
+        <div class="col">
+            <div class="card h-100 shadow-sm hover-shadow-lg transition-all">
+                <div class="position-relative">
+                    {% if item.file %}
+                        {% if item.file.name|slice:"-4:" == '.pdf' %}
+                        <div class="card-img-top bg-danger bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 150px;">
+                            <i class="fas fa-file-pdf text-danger fa-4x"></i>
+                        </div>
+                        {% elif item.file.name|slice:"-5:" == '.docx' %}
+                        <div class="card-img-top bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 150px;">
+                            <i class="fas fa-file-word text-primary fa-4x"></i>
+                        </div>
+                        {% elif item.file.name|slice:"-4:" == '.zip' %}
+                        <div class="card-img-top bg-warning bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 150px;">
+                            <i class="fas fa-file-archive text-warning fa-4x"></i>
+                        </div>
+                        {% else %}
+                        <div class="card-img-top bg-success bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 150px;">
+                            <i class="fas fa-file-alt text-success fa-4x"></i>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                    <div class="card-img-top bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 150px;">
+                        <i class="fas fa-file-alt text-secondary fa-4x"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="badge bg-white text-dark position-absolute top-0 end-0 m-2 shadow-sm">
+                        {{ item.get_content_type_display }}
+                    </div>
+                    
+                    {% if item.author %}
+                    <div class="badge bg-primary position-absolute top-0 start-0 m-2 shadow-sm">
+                        <i class="fas fa-user me-1"></i>{{ item.author.username }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title fw-bold mb-0">{{ item.name }}</h5>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-star text-warning me-1"></i>
+                            <span class="fw-bold">{{ item.rate|floatformat:1 }}</span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-muted small mb-3">
+                        <i class="far fa-calendar-alt me-1"></i> {{ item.date|date:"M d, Y" }}
+                        {% if item.download_count %}
+                        <span class="ms-2">
+                            <i class="fas fa-download me-1"></i> {{ item.download_count }}
+                        </span>
+                        {% endif %}
+                    </p>
+                    
+                    <p class="card-text text-muted">{{ item.desc|truncatechars:120 }}</p>
+                    
+                    <div class="mb-3">
+                        {% for tag in item.tag_list %}
+                        <span class="badge bg-light text-dark me-1 mb-1">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent border-top-0 pt-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'content_detail' item.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            <i class="far fa-eye me-1"></i> View
+                        </a>
+                        {% if item.file %}
+                        <a href="{{ item.file.url }}" class="btn btn-sm btn-primary rounded-pill px-3" 
+                           download="{{ item.file.name }}">
+                            <i class="fas fa-download me-1"></i> Download
+                        </a>
+                        {% else %}
+                        <span class="btn btn-sm btn-secondary rounded-pill px-3 disabled">
+                            <i class="fas fa-ban me-1"></i> No File
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card border-0 text-center py-5">
+                <div class="card-body">
+                    <i class="far fa-folder-open fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No Content Available</h4>
+                    <p class="text-muted">Be the first to share your study materials!</p>
+                    <a href="{% url 'content_create' %}" class="btn btn-primary rounded-pill px-4 mt-2">
+                        <i class="fas fa-plus me-2"></i>Upload Content
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.content_type %}&content_type={{ request.GET.content_type }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}">
+                    Previous
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+            </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <a class="page-link" href="#">{{ num }}</a>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.content_type %}&content_type={{ request.GET.content_type }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}">
+                        {{ num }}
+                    </a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.content_type %}&content_type={{ request.GET.content_type }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}">
+                    Next
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    .text-gradient {
+        background: linear-gradient(45deg, #3a7bd5, #00d2ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    .hover-shadow-lg {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .hover-shadow-lg:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    
+    .card-img-top {
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+    }
+</style>
+
+{% endblock %}
