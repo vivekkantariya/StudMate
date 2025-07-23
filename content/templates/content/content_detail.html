@@ -1,55 +1,157 @@
 {% extends 'layout.html' %}
-{% load static %}
-
 {% block content %}
-<div class="container mt-4">
-    <div class="mb-4 d-flex justify-content-between align-items-center">
-        <h2 class="text-gradient fw-bold">{{ item.name }}</h2>
-        <a href="{% url 'content_list' %}" class="btn btn-outline-primary rounded-pill">← Back to List</a>
-    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <p class="text-muted mb-1">
-                        <i class="far fa-calendar-alt me-1"></i> {{ item.date|date:"M d, Y" }}
-                        {% if item.author %}
-                            <span class="ms-3">
-                                <i class="fas fa-user me-1"></i>{{ item.author.username }}
-                            </span>
+<div class="main-content">
+    <div class="container py-5">
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h1 class="h2 mb-0">{{ item.name }}</h1>
+                            <span class="badge bg-primary">{{ item.get_content_type_display }}</span>
+                        </div>
+                        
+                        <div class="d-flex align-items-center mb-4">
+                            <img src="{% static 'images/default-profile.jpg' %}" 
+                                 class="rounded-circle me-2" width="40" height="40" 
+                                 alt="{{ item.author.username }}">
+                            <div>
+                                <div class="fw-bold">{{ item.author.username }}</div>
+                                <div class="text-muted small">
+                                    Uploaded on {{ item.date|date:"M d, Y" }}
+                                    {% if item.download_count %}
+                                    • <i class="fas fa-download ms-2"></i> {{ item.download_count }} downloads
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            {% for tag in item.tag_list %}
+                            <span class="badge bg-light text-dark me-1">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h5 class="mb-2">Description</h5>
+                            <p class="text-muted">{{ item.desc }}</p>
+                        </div>
+                        
+                        {% if item.file %}
+                        <div class="mb-4">
+                            <h5 class="mb-2">File</h5>
+                            <div class="d-flex align-items-center">
+                                {% if item.file.name|slice:"-4:" == '.pdf' %}
+                                <i class="fas fa-file-pdf fa-2x text-danger me-3"></i>
+                                {% elif item.file.name|slice:"-5:" == '.docx' %}
+                                <i class="fas fa-file-word fa-2x text-primary me-3"></i>
+                                {% elif item.file.name|slice:"-4:" == '.zip' %}
+                                <i class="fas fa-file-archive fa-2x text-warning me-3"></i>
+                                {% else %}
+                                <i class="fas fa-file-alt fa-2x text-success me-3"></i>
+                                {% endif %}
+                                <div>
+                                    <div>{{ item.file.name|slice:"30:" }}</div>
+                                    <div class="text-muted small">
+                                        {{ item.file.size|filesizeformat }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         {% endif %}
-                    </p>
-                    <p class="text-muted mb-1">
-                        <i class="fas fa-layer-group me-1"></i> {{ item.get_content_type_display }}
-                        {% if item.download_count %}
-                            <span class="ms-3">
-                                <i class="fas fa-download me-1"></i> {{ item.download_count }} Downloads
-                            </span>
-                        {% endif %}
-                    </p>
-                    <p class="mb-3"><strong>Rating:</strong> {{ item.rate|floatformat:1 }} <i class="fas fa-star text-warning"></i></p>
+                        
+                        <div class="d-flex gap-3">
+                            {% if item.file %}
+                            <a href="{{ item.file.url }}?download=1" 
+                               class="btn btn-primary" download>
+                                <i class="fas fa-download me-2"></i> Download
+                            </a>
+                            {% endif %}
+                            
+                            {% if item.author == request.user %}
+                            <a href="{% url 'content_edit' item.pk %}" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-edit me-2"></i> Edit
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <p class="lead">{{ item.desc }}</p>
-
-            <div class="mb-3">
-                {% for tag in item.tag_list.split "," %}
-                <span class="badge bg-light text-dark me-1">{{ tag|trim }}</span>
-                {% endfor %}
+            
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Related Resources -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Related Resources</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if related_resources %}
+                        <div class="list-group list-group-flush">
+                            {% for resource in related_resources %}
+                            <a href="{% url 'content_detail' resource.pk %}" 
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ resource.name }}</span>
+                                    <span class="badge bg-light text-dark">
+                                        {{ resource.get_content_type_display }}
+                                    </span>
+                                </div>
+                                <div class="small text-muted">
+                                    {{ resource.date|date:"M d, Y" }}
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No related resources found</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Author Info -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">About the Author</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="{% static 'images/default-profile.jpg' %}" 
+                                 class="rounded-circle me-3" width="60" height="60" 
+                                 alt="{{ item.author.username }}">
+                            <div>
+                                <h6 class="mb-0">{{ item.author.username }}</h6>
+                                <small class="text-muted">
+                                    Joined {{ item.author.date_joined|date:"M Y" }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between text-center">
+                            <div>
+                                <div class="h5 mb-0">{{ item.author.contents.count }}</div>
+                                <small class="text-muted">Resources</small>
+                            </div>
+                            <div>
+                                <div class="h5 mb-0">
+                                    {{ item.author.contents.aggregate(total=Sum('download_count'))['total']|default:0 }}
+                                </div>
+                                <small class="text-muted">Downloads</small>
+                            </div>
+                            <div>
+                                <div class="h5 mb-0">
+                                    {{ item.author.contents.aggregate(avg=Avg('rate'))['avg']|floatformat:1|default:"0.0" }}
+                                </div>
+                                <small class="text-muted">Avg Rating</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            {% if item.file %}
-            <a href="{{ item.file.url }}" class="btn btn-primary mt-3" download="{{ item.file.name }}">
-                <i class="fas fa-download me-1"></i> Download File
-            </a>
-            {% else %}
-            <div class="alert alert-warning mt-3">
-                <i class="fas fa-ban me-2"></i>No file available for this content.
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
+
 {% endblock %}

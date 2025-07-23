@@ -1,0 +1,41 @@
+<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle for the icon -->
+  <circle cx="30" cy="30" r="25" fill="#3B82F6" stroke="#1E40AF" stroke-width="2"/>
+  
+  <!-- Network nodes -->
+  <circle cx="22" cy="22" r="3" fill="white"/>
+  <circle cx="38" cy="22" r="3" fill="white"/>
+  <circle cx="30" cy="38" r="3" fill="white"/>
+  <circle cx="15" cy="35" r="2.5" fill="white" opacity="0.8"/>
+  <circle cx="45" cy="35" r="2.5" fill="white" opacity="0.8"/>
+  
+  <!-- Connection lines -->
+  <line x1="22" y1="22" x2="38" y2="22" stroke="white" stroke-width="2" opacity="0.8"/>
+  <line x1="22" y1="22" x2="30" y2="38" stroke="white" stroke-width="2" opacity="0.8"/>
+  <line x1="38" y1="22" x2="30" y2="38" stroke="white" stroke-width="2" opacity="0.8"/>
+  <line x1="15" y1="35" x2="22" y2="22" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  <line x1="45" y1="35" x2="38" y2="22" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  <line x1="15" y1="35" x2="30" y2="38" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  <line x1="45" y1="35" x2="30" y2="38" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  
+  <!-- Document/Note icon overlay -->
+  <rect x="26" y="26" width="8" height="10" fill="white" rx="1"/>
+  <line x1="28" y1="29" x2="32" y2="29" stroke="#3B82F6" stroke-width="0.8"/>
+  <line x1="28" y1="31" x2="32" y2="31" stroke="#3B82F6" stroke-width="0.8"/>
+  <line x1="28" y1="33" x2="31" y2="33" stroke="#3B82F6" stroke-width="0.8"/>
+  
+  <!-- Gradients -->
+  <defs>
+      <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      </linearGradient>
+      <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+      </linearGradient>
+    </defs>
+
+    <!-- Text positioned within viewBox -->
+    <text x="70" y="40" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="url(#grad2)">NoteNet</text>
+</svg>

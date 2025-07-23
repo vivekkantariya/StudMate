@@ -1,0 +1,24 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">My Uploaded Content</h2>
+
+    {% if data   %}
+        <div class="list-group">
+            {% for content in data   %}
+                <div class="list-group-item mb-3 shadow-sm rounded">
+                    <h5 class="mb-1">{{ content.name }}</h5>
+                    <p class="mb-1">{{ content.desc|linebreaks }}</p>
+                    <p><strong>Type:</strong> {{ content.content_type }}</p>
+                    <p><strong>Tags:</strong> {{ content.tags }}</p>
+                    <p><strong>Uploaded on:</strong> {{ content.created_at|date:"F j, Y, g:i a" }}</p>
+                    <a href="{{ content.file.url }}" class="btn btn-primary btn-sm" target="_blank">Download File</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>You haven't uploaded any content yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

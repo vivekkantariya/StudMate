@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 import re
-from .models import Content
+from .models import Content, Profile
 from django.core.exceptions import ValidationError
 
 class CustomUserForm(UserCreationForm):
@@ -68,3 +68,15 @@ class ContentForm(forms.ModelForm):
             raise forms.ValidationError("Please enter between 3 to 5 unique tags.")
         return ', '.join(tag_set)
 
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['bio', 'institution', 'course', 'semester', 'avatar', 'website', 'location']
+        widgets = {
+            'bio': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
+            'institution': forms.TextInput(attrs={'class': 'form-control'}),
+            'course': forms.TextInput(attrs={'class': 'form-control'}),
+            'semester': forms.NumberInput(attrs={'class': 'form-control'}),
+            'website': forms.URLInput(attrs={'class': 'form-control'}),
+            'location': forms.TextInput(attrs={'class': 'form-control'}),
+        }

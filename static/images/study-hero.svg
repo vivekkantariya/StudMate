@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" class="hero-illustration">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3a7bd5" />
+      <stop offset="100%" stop-color="#00d2ff" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background shapes -->
+  <rect width="800" height="600" fill="url(#grad1)" opacity="0.1"/>
+  <circle cx="700" cy="100" r="60" fill="#fff" opacity="0.1"/>
+  <circle cx="100" cy="500" r="80" fill="#fff" opacity="0.1"/>
+  
+  <!-- Main laptop -->
+  <rect x="250" y="200" width="300" height="200" rx="10" fill="#fff"/>
+  <rect x="280" y="220" width="240" height="160" rx="5" fill="#f5f7fa"/>
+  <rect x="320" y="400" width="160" height="20" rx="3" fill="#e1e5eb"/>
+  
+  <!-- Documents -->
+  <rect x="400" y="250" width="80" height="100" rx="3" fill="#3a7bd5" opacity="0.8"/>
+  <rect x="390" y="240" width="80" height="100" rx="3" fill="#00d2ff" opacity="0.8"/>
+  <rect x="380" y="230" width="80" height="100" rx="3" fill="#fff"/>
+  
+  <!-- Book -->
+  <path d="M150,250 Q170,230 200,250 L200,350 Q170,370 150,350 Z" fill="#ff7e5f"/>
+  <path d="M200,250 L230,240 L230,340 L200,350 Z" fill="#feb47b"/>
+  <line x1="200" y1="250" x2="200" y2="350" stroke="#fff" stroke-width="2"/>
+  
+  <!-- Graduation cap -->
+  <path d="M600,250 L650,220 L700,250 L650,280 Z" fill="#6a3093"/>
+  <rect x="630" y="250" width="40" height="30" fill="#6a3093"/>
+  <rect x="640" y="280" width="20" height="50" fill="#4776E6"/>
+  
+  <!-- Magnifying glass -->
+  <circle cx="500" cy="150" r="40" fill="none" stroke="#fff" stroke-width="8"/>
+  <line x1="530" y1="180" x2="580" y2="230" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Icons on screen -->
+  <circle cx="350" cy="280" r="15" fill="#3a7bd5"/>
+  <rect x="380" cy="280" width="30" height="30" rx="5" fill="#00d2ff" y="265"/>
+  <path d="M420,265 L450,265 L450,295 L420,295 Z M420,265 L450,295 M450,265 L420,295" fill="none" stroke="#ff7e5f" stroke-width="3"/>
+  
+  <!-- Stars -->
+  <path d="M100,150 L110,180 L140,180 L115,200 L125,230 L100,210 L75,230 L85,200 L60,180 L90,180 Z" fill="#fff"/>
+  <path d="M700,400 L710,430 L740,430 L715,450 L725,480 L700,460 L675,480 L685,450 L660,430 L690,430 Z" fill="#fff" opacity="0.7"/>
+</svg>

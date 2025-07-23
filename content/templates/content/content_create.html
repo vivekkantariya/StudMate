@@ -2,51 +2,290 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4 text-gradient fw-bold">Upload New Content</h2>
-
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                {{ form.non_field_errors }}
-
-                <div class="mb-3">
-                    <label for="{{ form.name.id_for_label }}" class="form-label">Title</label>
-                    {{ form.name }}
-                    {{ form.name.errors }}
+<div class="main-content">
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-header mb-4">
+                    <h2 class="fw-bold text-gradient">Upload New Content</h2>
+                    <p class="text-muted">Share your study materials with the community</p>
                 </div>
 
-                <div class="mb-3">
-                    <label for="{{ form.desc.id_for_label }}" class="form-label">Description</label>
-                    {{ form.desc }}
-                    {{ form.desc.errors }}
-                </div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                            {% csrf_token %}
+                            {{ form.non_field_errors }}
 
-                <div class="mb-3">
-                    <label for="{{ form.content_type.id_for_label }}" class="form-label">Content Type</label>
-                    {{ form.content_type }}
-                    {{ form.content_type.errors }}
-                </div>
+                            <div class="row">
+                                <!-- Title -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                                        Title <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-heading"></i>
+                                        </span>
+                                        {{ form.name }}
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        Please provide a title for your content.
+                                    </div>
+                                    {{ form.name.errors }}
+                                </div>
 
-                <div class="mb-3">
-                    <label for="{{ form.tags.id_for_label }}" class="form-label">Tags (comma separated)</label>
-                    {{ form.tags }}
-                    {{ form.tags.errors }}
-                </div>
+                                <!-- Description -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="{{ form.desc.id_for_label }}" class="form-label">
+                                        Description <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-align-left"></i>
+                                        </span>
+                                        {{ form.desc }}
+                                    </div>
+                                    <div class="form-text">Describe what your content is about (min. 50 characters)</div>
+                                    <div class="invalid-feedback">
+                                        Please provide a detailed description.
+                                    </div>
+                                    {{ form.desc.errors }}
+                                </div>
 
-                <div class="mb-3">
-                    <label for="{{ form.file.id_for_label }}" class="form-label">Upload File</label>
-                    {{ form.file }}
-                    {{ form.file.errors }}
-                </div>
+                                <!-- Content Type and Tags -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.content_type.id_for_label }}" class="form-label">
+                                        Content Type <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-tag"></i>
+                                        </span>
+                                        {{ form.content_type }}
+                                    </div>
+                                    {{ form.content_type.errors }}
+                                </div>
 
-                <div class="d-flex justify-content-between">
-                    <a href="{% url 'content_list' %}" class="btn btn-outline-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Upload</button>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.tags.id_for_label }}" class="form-label">
+                                        Tags <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-tags"></i>
+                                        </span>
+                                        {{ form.tags }}
+                                    </div>
+                                    <div class="form-text">Comma separated (3-5 tags, e.g. physics, formulas, semester2)</div>
+                                    {{ form.tags.errors }}
+                                </div>
+
+                                <!-- File Upload -->
+                                <div class="col-md-12 mb-4">
+                                    <label for="{{ form.file.id_for_label }}" class="form-label">
+                                        Upload File <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="file-upload-container">
+                                        <div class="file-upload-input">
+                                            {{ form.file }}
+                                            <div class="file-upload-preview">
+                                                <div class="file-upload-info">
+                                                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-2"></i>
+                                                    <h5 class="mb-1">Drag & drop your file here</h5>
+                                                    <p class="text-muted mb-2">or click to browse</p>
+                                                    <p class="small text-muted mb-0">
+                                                        Supported formats: PDF, DOCX, ZIP (Max 10MB)
+                                                    </p>
+                                                </div>
+                                                <div class="file-upload-selected d-none">
+                                                    <i class="fas fa-file-alt fa-3x text-success mb-2"></i>
+                                                    <h6 class="file-name mb-1"></h6>
+                                                    <p class="file-size small text-muted mb-0"></p>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2 change-file">
+                                                        Change File
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{ form.file.errors }}
+                                </div>
+
+                                <!-- Privacy Toggle -->
+                                <div class="col-md-12 mb-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="isPublic" name="is_public" checked>
+                                        <label class="form-check-label" for="isPublic">
+                                            Make this content public
+                                        </label>
+                                        <div class="form-text">
+                                            Public content can be viewed by anyone. Uncheck to keep private.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{% url 'content_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-cloud-upload-alt me-2"></i> Upload Content
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Custom styles for the upload page */
+    .page-header {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+    }
+    
+    .text-gradient {
+        background: linear-gradient(135deg, #4361ee, #3f37c9);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .file-upload-container {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .file-upload-input {
+        position: relative;
+    }
+    
+    .file-upload-input input[type="file"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+    }
+    
+    .file-upload-preview {
+        border: 2px dashed #dee2e6;
+        border-radius: 0.5rem;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .file-upload-input:hover .file-upload-preview {
+        border-color: #4361ee;
+        background-color: rgba(67, 97, 238, 0.05);
+    }
+    
+    .file-upload-selected {
+        display: none;
+    }
+    
+    .file-upload-info {
+        display: block;
+    }
+    
+    .file-upload-input.has-file .file-upload-info {
+        display: none;
+    }
+    
+    .file-upload-input.has-file .file-upload-selected {
+        display: block;
+    }
+    
+    .form-check-input:checked {
+        background-color: #4361ee;
+        border-color: #4361ee;
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // File upload preview
+        const fileInput = document.querySelector('input[type="file"]');
+        const fileUploadContainer = document.querySelector('.file-upload-input');
+        const fileNameElement = document.querySelector('.file-name');
+        const fileSizeElement = document.querySelector('.file-size');
+        
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                fileUploadContainer.classList.add('has-file');
+                
+                // Display file name
+                fileNameElement.textContent = file.name;
+                
+                // Display file size
+                const fileSize = file.size > 1024 * 1024 
+                    ? (file.size / (1024 * 1024)).toFixed(2) + ' MB' 
+                    : (file.size / 1024).toFixed(2) + ' KB';
+                fileSizeElement.textContent = fileSize;
+            }
+        });
+        
+        // Change file button
+        document.querySelector('.change-file').addEventListener('click', function() {
+            fileInput.value = '';
+            fileUploadContainer.classList.remove('has-file');
+        });
+        
+        // Drag and drop functionality
+        const fileUploadPreview = document.querySelector('.file-upload-preview');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUploadPreview.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUploadPreview.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUploadPreview.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            fileUploadPreview.classList.add('bg-light');
+        }
+        
+        function unhighlight() {
+            fileUploadPreview.classList.remove('bg-light');
+        }
+        
+        fileUploadPreview.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            
+            // Trigger change event
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+        }
+    });
+</script>
 {% endblock %}
