@@ -1,157 +1,449 @@
 {% extends 'layout.html' %}
 {% block content %}
+{% load static %}
 
-<div class="main-content">
-    <div class="container py-5">
-        <div class="row">
-            <!-- Main Content -->
-            <div class="col-lg-8">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h1 class="h2 mb-0">{{ item.name }}</h1>
-                            <span class="badge bg-primary">{{ item.get_content_type_display }}</span>
-                        </div>
-                        
-                        <div class="d-flex align-items-center mb-4">
-                            <img src="{% static 'images/default-profile.jpg' %}" 
-                                 class="rounded-circle me-2" width="40" height="40" 
-                                 alt="{{ item.author.username }}">
-                            <div>
-                                <div class="fw-bold">{{ item.author.username }}</div>
-                                <div class="text-muted small">
-                                    Uploaded on {{ item.date|date:"M d, Y" }}
-                                    {% if item.download_count %}
-                                    • <i class="fas fa-download ms-2"></i> {{ item.download_count }} downloads
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-4">
-                            {% for tag in item.tag_list %}
-                            <span class="badge bg-light text-dark me-1">{{ tag }}</span>
-                            {% endfor %}
-                        </div>
-                        
-                        <div class="mb-4">
-                            <h5 class="mb-2">Description</h5>
-                            <p class="text-muted">{{ item.desc }}</p>
-                        </div>
-                        
-                        {% if item.file %}
-                        <div class="mb-4">
-                            <h5 class="mb-2">File</h5>
-                            <div class="d-flex align-items-center">
-                                {% if item.file.name|slice:"-4:" == '.pdf' %}
-                                <i class="fas fa-file-pdf fa-2x text-danger me-3"></i>
-                                {% elif item.file.name|slice:"-5:" == '.docx' %}
-                                <i class="fas fa-file-word fa-2x text-primary me-3"></i>
-                                {% elif item.file.name|slice:"-4:" == '.zip' %}
-                                <i class="fas fa-file-archive fa-2x text-warning me-3"></i>
-                                {% else %}
-                                <i class="fas fa-file-alt fa-2x text-success me-3"></i>
-                                {% endif %}
-                                <div>
-                                    <div>{{ item.file.name|slice:"30:" }}</div>
-                                    <div class="text-muted small">
-                                        {{ item.file.size|filesizeformat }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="d-flex gap-3">
-                            {% if item.file %}
-                            <a href="{{ item.file.url }}?download=1" 
-                               class="btn btn-primary" download>
-                                <i class="fas fa-download me-2"></i> Download
-                            </a>
-                            {% endif %}
-                            
-                            {% if item.author == request.user %}
-                            <a href="{% url 'content_edit' item.pk %}" 
-                               class="btn btn-outline-secondary">
-                                <i class="fas fa-edit me-2"></i> Edit
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+<link rel="stylesheet" href="{% static 'css/contentdetail.css' %}">
+
+<div class="content-detail-page">
+    <!-- Main Content Area -->
+    <div class="content-main">
+        <!-- Content Header Section -->
+        <div class="content-header-section">
+            <div class="content-breadcrumbs">
+                <a href="{% url 'home' %}">Home</a>
+                <i class="fas fa-chevron-right mx-2"></i>
+                <span>{{ item.get_content_type_display }}</span>
             </div>
             
-            <!-- Sidebar -->
-            <div class="col-lg-4">
-                <!-- Related Resources -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">Related Resources</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if related_resources %}
-                        <div class="list-group list-group-flush">
-                            {% for resource in related_resources %}
-                            <a href="{% url 'content_detail' resource.pk %}" 
-                               class="list-group-item list-group-item-action">
-                                <div class="d-flex justify-content-between">
-                                    <span>{{ resource.name }}</span>
-                                    <span class="badge bg-light text-dark">
-                                        {{ resource.get_content_type_display }}
-                                    </span>
-                                </div>
-                                <div class="small text-muted">
-                                    {{ resource.date|date:"M d, Y" }}
-                                </div>
-                            </a>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <p class="text-muted">No related resources found</p>
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h1 class="content-title">{{ item.name }}</h1>
+                    <div class="content-meta">
+                        <span class="content-type-badge">{{ item.get_content_type_display }}</span>
+                        <span class="content-rating">
+                            <i class="fas fa-star"></i> {{ item.rate|default:"0.0" }}/5.0
+                        </span>
+                        {% if item.download_count %}
+                        <span class="content-downloads">
+                            <i class="fas fa-download"></i> {{ item.download_count }}
+                        </span>
                         {% endif %}
                     </div>
                 </div>
                 
-                <!-- Author Info -->
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">About the Author</h5>
+                <div class="content-actions">
+                    {% if item.file %}
+                    <a href="{{ item.file.url }}?download=1" class="btn btn-primary btn-download" download>
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-outline-secondary btn-share" onclick="shareContent()">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                    {% if request.user.is_authenticated %}
+                    <form action="{% url 'toggle_bookmark' item.id %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-{% if item.is_bookmarked %}warning{% else %}secondary{% endif %} btn-bookmark">
+                            <i class="fas fa-bookmark"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Preview Section -->
+        {% if item.file and item.file.name|slice:"-4:" == '.pdf' %}
+        <div class="content-preview-section">
+            <div class="preview-header">
+                <h3><i class="fas fa-file-pdf text-danger me-2"></i> Document Preview</h3>
+                <div class="preview-controls">
+                    <button class="btn btn-sm btn-outline-secondary" id="prevPage">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span class="page-info">Page <span id="pageNum">1</span> of <span id="pageCount">0</span></span>
+                    <button class="btn btn-sm btn-outline-secondary" id="nextPage">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="preview-container">
+                <canvas id="pdfPreview" class="preview-canvas"></canvas>
+            </div>
+            <div class="preview-footer">
+                <small class="text-muted">Preview limited to first 3 pages. Download for full content.</small>
+            </div>
+        </div>
+        {% elif item.file %}
+        <div class="content-preview-section">
+            <div class="preview-header">
+                <h3>
+                    {% if item.file.name|slice:"-5:" == '.docx' %}
+                    <i class="fas fa-file-word text-primary me-2"></i>
+                    {% else %}
+                    <i class="fas fa-file-alt text-secondary me-2"></i>
+                    {% endif %}
+                    File Preview Not Available
+                </h3>
+            </div>
+            <div class="preview-placeholder">
+                <i class="fas fa-file-download display-4 text-muted mb-3"></i>
+                <p>Download the file to view its contents</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Content Details Section -->
+        <div class="content-details-section">
+            <div class="detail-card">
+                <div class="detail-card-header">
+                    <h3><i class="fas fa-info-circle me-2"></i>Details</h3>
+                </div>
+                <div class="detail-card-body">
+                    <div class="detail-row">
+                        <div class="detail-label">Description</div>
+                        <div class="detail-value">{{ item.desc|default:"No description provided." }}</div>
                     </div>
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <img src="{% static 'images/default-profile.jpg' %}" 
-                                 class="rounded-circle me-3" width="60" height="60" 
-                                 alt="{{ item.author.username }}">
-                            <div>
-                                <h6 class="mb-0">{{ item.author.username }}</h6>
-                                <small class="text-muted">
-                                    Joined {{ item.author.date_joined|date:"M Y" }}
-                                </small>
-                            </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Uploaded</div>
+                        <div class="detail-value">{{ item.date|date:"F d, Y" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Last Updated</div>
+                        <div class="detail-value">{{ item.updated_at|timesince }} ago</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">File Type</div>
+                        <div class="detail-value">
+                            {% if item.file %}
+                                {{ item.file.name|slice:"-4:"|upper }} File
+                            {% else %}
+                                No file attached
+                            {% endif %}
                         </div>
-                        <div class="d-flex justify-content-between text-center">
-                            <div>
-                                <div class="h5 mb-0">{{ item.author.contents.count }}</div>
-                                <small class="text-muted">Resources</small>
-                            </div>
-                            <div>
-                                <div class="h5 mb-0">
-                                    {{ item.author.contents.aggregate(total=Sum('download_count'))['total']|default:0 }}
-                                </div>
-                                <small class="text-muted">Downloads</small>
-                            </div>
-                            <div>
-                                <div class="h5 mb-0">
-                                    {{ item.author.contents.aggregate(avg=Avg('rate'))['avg']|floatformat:1|default:"0.0" }}
-                                </div>
-                                <small class="text-muted">Avg Rating</small>
-                            </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Tags</div>
+                        <div class="detail-value">
+                            {% for tag in item.tag_list %}
+                            <span class="tag-badge">{{ tag }}</span>
+                            {% empty %}
+                            <span class="text-muted">No tags</span>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Author Section -->
+        <div class="author-section">
+            <div class="author-card">
+                <div class="author-header">
+                    <img src="{% static 'images/default-avatar.png' %}" 
+                         alt="{{ item.author.username }}"
+                         class="author-avatar"
+                         onerror="this.src='https://ui-avatars.com/api/?name={{ item.author.username }}&background=4f46e5&color=ffffff&size=150'">
+                    <div class="author-info">
+                        <h4>{{ item.author.username }}</h4>
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            Member since {{ item.author.date_joined|date:"F Y" }}
+                        </p>
+                        <div class="author-rating">
+                            <i class="fas fa-star text-warning"></i>
+                            <span>4.8</span>
+                            <span class="text-muted mx-2">|</span>
+                            <i class="fas fa-file-alt text-primary"></i>
+                            <span>{{ item.author.contents.count }} resources</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="author-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ item.author.contents.count }}</div>
+                        <div class="stat-label">Resources</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">1.2K</div>
+                        <div class="stat-label">Downloads</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">4.8</div>
+                        <div class="stat-label">Avg Rating</div>
+                    </div>
+                </div>
+                <div class="author-actions">
+                    <a href="#" class="btn btn-outline-primary">View Profile</a>
+                    <a href="#" class="btn btn-primary">Follow</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Resources Section -->
+        <div class="related-resources-section">
+            <h3 class="section-title">
+                <i class="fas fa-layer-group me-2"></i>
+                Related Resources
+            </h3>
+            
+            {% if related_resources %}
+            <div class="related-resources-grid">
+                {% for resource in related_resources %}
+                <a href="{% url 'content_detail' resource.pk %}" class="resource-card">
+                    <div class="resource-icon">
+                        {% if resource.file.name|slice:"-4:" == '.pdf' %}
+                        <i class="fas fa-file-pdf text-danger"></i>
+                        {% elif resource.file.name|slice:"-5:" == '.docx' %}
+                        <i class="fas fa-file-word text-primary"></i>
+                        {% else %}
+                        <i class="fas fa-file-alt text-secondary"></i>
+                        {% endif %}
+                    </div>
+                    <div class="resource-info">
+                        <h5 class="resource-title">{{ resource.name|truncatechars:50 }}</h5>
+                        <div class="resource-meta">
+                            <span class="resource-type">{{ resource.get_content_type_display }}</span>
+                            <span class="resource-rating">
+                                <i class="fas fa-star text-warning"></i> {{ resource.rate|default:"0.0" }}
+                            </span>
+                        </div>
+                        <div class="resource-author">
+                            <i class="fas fa-user"></i> {{ resource.author.username }}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5>No related resources found</h5>
+                <p class="text-muted">Try searching for similar content</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="content-sidebar">
+        <!-- Quick Stats Card -->
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <h4><i class="fas fa-chart-bar me-2"></i>Quick Stats</h4>
+            </div>
+            <div class="sidebar-card-body">
+                <div class="stat-item">
+                    <i class="fas fa-eye text-primary"></i>
+                    <div>
+                        <div class="stat-value">1,245</div>
+                        <div class="stat-label">Views</div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-download text-success"></i>
+                    <div>
+                        <div class="stat-value">{{ item.download_count|default:"0" }}</div>
+                        <div class="stat-label">Downloads</div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-bookmark text-warning"></i>
+                    <div>
+                        <div class="stat-value">87</div>
+                        <div class="stat-label">Bookmarks</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Info Card -->
+        {% if item.file %}
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <h4><i class="fas fa-file-alt me-2"></i>File Information</h4>
+            </div>
+            <div class="sidebar-card-body">
+                <div class="file-info">
+                    <div class="file-icon">
+                        {% if item.file.name|slice:"-4:" == '.pdf' %}
+                        <i class="fas fa-file-pdf text-danger"></i>
+                        {% elif item.file.name|slice:"-5:" == '.docx' %}
+                        <i class="fas fa-file-word text-primary"></i>
+                        {% else %}
+                        <i class="fas fa-file-alt text-secondary"></i>
+                        {% endif %}
+                    </div>
+                    <div class="file-details">
+                        <div class="file-name">{{ item.file.name|slice:"50:" }}</div>
+                        <div class="file-size">{{ item.file.size }}</div>
+                    </div>
+                </div>
+                <div class="file-actions">
+                    <a href="{{ item.file.url }}?download=1" class="btn btn-sm btn-primary w-100" download>
+                        <i class="fas fa-download me-2"></i> Download
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Report Card -->
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <h4><i class="fas fa-flag me-2"></i>Report Issues</h4>
+            </div>
+            <div class="sidebar-card-body">
+                <p class="small text-muted">Found an issue with this content? Let us know.</p>
+                <button class="btn btn-sm btn-outline-danger w-100" onclick="reportContent()">
+                    <i class="fas fa-flag me-2"></i> Report Content
+                </button>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- PDF.js for PDF preview -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+<script>
+    // Set PDF.js worker path
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+    
+    // PDF Preview functionality
+    {% if item.file and item.file.name|slice:"-4:" == '.pdf' %}
+    let pdfDoc = null,
+        pageNum = 1,
+        pageRendering = false,
+        pageNumPending = null,
+        scale = 1.5,
+        canvas = document.getElementById('pdfPreview'),
+        ctx = canvas.getContext('2d');
+
+    // Initialize PDF rendering
+    function renderPage(num) {
+        pageRendering = true;
+        pdfDoc.getPage(num).then(function(page) {
+            const viewport = page.getViewport({ scale: scale });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+            };
+            
+            const renderTask = page.render(renderContext);
+            
+            renderTask.promise.then(function() {
+                pageRendering = false;
+                if (pageNumPending !== null) {
+                    renderPage(pageNumPending);
+                    pageNumPending = null;
+                }
+            });
+        });
+        
+        document.getElementById('pageNum').textContent = num;
+    }
+
+    function queueRenderPage(num) {
+        if (pageRendering) {
+            pageNumPending = num;
+        } else {
+            renderPage(num);
+        }
+    }
+
+    function onPrevPage() {
+        if (pageNum <= 1) {
+            return;
+        }
+        pageNum--;
+        queueRenderPage(pageNum);
+    }
+
+    function onNextPage() {
+        if (pageNum >= pdfDoc.numPages || pageNum >= 3) { // Limit to 3 pages for preview
+            return;
+        }
+        pageNum++;
+        queueRenderPage(pageNum);
+    }
+
+    // Load the PDF
+    pdfjsLib.getDocument("{{ item.file.url }}").promise.then(function(pdfDoc_) {
+        pdfDoc = pdfDoc_;
+        document.getElementById('pageCount').textContent = Math.min(pdfDoc.numPages, 3);
+        
+        // Render the first page
+        renderPage(pageNum);
+    });
+
+    document.getElementById('prevPage').addEventListener('click', onPrevPage);
+    document.getElementById('nextPage').addEventListener('click', onNextPage);
+    {% endif %}
+
+    // Share functionality
+    function shareContent() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ item.name }}',
+                text: 'Check out this {{ item.get_content_type_display }} on NoteNet: {{ item.desc|truncatechars:100 }}',
+                url: window.location.href
+            }).catch(err => {
+                console.log('Error sharing:', err);
+            });
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                const toast = document.createElement('div');
+                toast.className = 'share-toast';
+                toast.innerHTML = '<i class="fas fa-check-circle me-2"></i> Link copied to clipboard!';
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 10);
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
+            });
+        }
+    }
+
+    // Report functionality
+    function reportContent() {
+        // In a real implementation, this would open a modal
+        const modal = document.createElement('div');
+        modal.className = 'report-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Report Content</h5>
+                    <button class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Please select the reason for reporting:</p>
+                    <div class="report-options">
+                        <label><input type="radio" name="reportReason" value="copyright"> Copyright violation</label>
+                        <label><input type="radio" name="reportReason" value="inappropriate"> Inappropriate content</label>
+                        <label><input type="radio" name="reportReason" value="spam"> Spam or misleading</label>
+                        <label><input type="radio" name="reportReason" value="other"> Other</label>
+                    </div>
+                    <textarea class="form-control mt-3" placeholder="Additional details (optional)"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="this.parentElement.parentElement.remove()">Cancel</button>
+                    <button class="btn btn-danger">Submit Report</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+</script>
 
 {% endblock %}

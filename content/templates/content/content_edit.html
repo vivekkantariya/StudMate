@@ -1,0 +1,234 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/contentedit.css' %}">
+<div class="content-edit-container">
+    <div class="edit-header">
+        <div class="header-content">
+            <h1 class="edit-title">
+                <i class="fas fa-edit me-2"></i> Edit Content
+            </h1>
+            <p class="edit-subtitle">Update your content details and files</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'content_detail' content.id %}" class="btn btn-outline-secondary">
+                <i class="fas fa-times me-1"></i> Cancel
+            </a>
+        </div>
+    </div>
+
+    <div class="edit-content-wrapper">
+        <div class="edit-card">
+            <form method="post" enctype="multipart/form-data" class="edit-form">
+                {% csrf_token %}
+                
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            <i class="fas fa-heading me-2"></i> Title
+                        </label>
+                        {{ form.name }}
+                        <small class="form-text">Give your content a clear, descriptive title</small>
+                        {{ form.name.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.desc.id_for_label }}" class="form-label">
+                            <i class="fas fa-align-left me-2"></i> Description
+                        </label>
+                        {{ form.desc }}
+                        <small class="form-text">Provide details about what this content contains</small>
+                        {{ form.desc.errors }}
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.content_type.id_for_label }}" class="form-label">
+                                <i class="fas fa-tag me-2"></i> Content Type
+                            </label>
+                            {{ form.content_type }}
+                            {{ form.content_type.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.tags.id_for_label }}" class="form-label">
+                                <i class="fas fa-tags me-2"></i> Tags
+                            </label>
+                            {{ form.tags }}
+                            <small class="form-text">Separate tags with commas (e.g., math, algebra)</small>
+                            {{ form.tags.errors }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-file me-2"></i> Current File
+                        </label>
+                        <div class="current-file">
+                            {% if content.file %}
+                            <div class="file-preview">
+                                <i class="fas fa-file-pdf"></i>
+                                <div class="file-info">
+                                    <span class="file-name">{{ content.file.name|truncatechars:30 }}</span>
+                                    <span class="file-size">{{ content.file.size|filesizeformat }}</span>
+                                </div>
+                                <a href="{{ content.file.url }}" class="download-btn" download>
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="no-file">
+                                <i class="fas fa-exclamation-circle"></i> No file uploaded
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.file.id_for_label }}" class="form-label">
+                            <i class="fas fa-file-upload me-2"></i> Update File
+                        </label>
+                        <div class="file-upload">
+                            <label class="upload-area" for="id_file">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span class="upload-text">Click to browse or drag & drop</span>
+                                <span class="upload-hint">Supports: PDF, DOCX, PPTX, ZIP (Max 25MB)</span>
+                                {{ form.file }}
+                            </label>
+                        </div>
+                        {{ form.file.errors }}
+                    </div>
+
+                    <div class="form-group form-checkbox">
+                        <label for="isPublic" class="form-label">
+                            <i class="fas fa-globe me-2"></i> Visibility
+                        </label>
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="isPublic" name="is_public" {% if content.is_public %}checked{% endif %}>
+                            <label for="isPublic">Make this content public</label>
+                            <small class="form-text">Public content can be viewed by anyone</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-save">
+                        <i class="fas fa-save me-2"></i> Save Changes
+                    </button>
+                    <a href="{% url 'content_delete' content.id %}" class="btn btn-outline-danger btn-delete">
+                        <i class="fas fa-trash-alt me-2"></i> Delete
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="edit-sidebar">
+            <div class="sidebar-card">
+                <h3 class="sidebar-title">
+                    <i class="fas fa-info-circle me-2"></i> Content Information
+                </h3>
+                <div class="info-item">
+                    <span class="info-label">Created:</span>
+                    <span class="info-value">{{ content.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Last Updated:</span>
+                    <span class="info-value">{{ content.updated_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Downloads:</span>
+                    <span class="info-value">{{ content.download_count }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Views:</span>
+                    <span class="info-value">{{ content.view_count }}</span>
+                </div>
+            </div>
+
+            <div class="sidebar-card">
+                <h3 class="sidebar-title">
+                    <i class="fas fa-lightbulb me-2"></i> Best Practices
+                </h3>
+                <ul class="tips-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Use clear and specific titles
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Include relevant keywords in description
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Choose appropriate content type
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Add multiple tags for better discoverability
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // File upload interaction
+        const uploadArea = document.querySelector('.upload-area');
+        const fileInput = document.getElementById('id_file');
+        
+        // Highlight when dragging over
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#3498db';
+            uploadArea.style.backgroundColor = 'rgba(52, 152, 219, 0.05)';
+        });
+        
+        // Remove highlight when leaving
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#ddd';
+            uploadArea.style.backgroundColor = '#f9f9f9';
+        });
+        
+        // Handle dropped files
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ddd';
+            uploadArea.style.backgroundColor = '#f9f9f9';
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updateFilePreview();
+            }
+        });
+        
+        // Handle selected files
+        fileInput.addEventListener('change', updateFilePreview);
+        
+        function updateFilePreview() {
+            if (fileInput.files.length) {
+                const file = fileInput.files[0];
+                const fileSize = file.size > 1024 * 1024 
+                    ? (file.size / (1024 * 1024)).toFixed(2) + ' MB' 
+                    : (file.size / 1024).toFixed(2) + ' KB';
+                
+                uploadArea.innerHTML = `
+                    <i class="fas fa-file-alt"></i>
+                    <span class="upload-text">${file.name}</span>
+                    <span class="upload-hint">${fileSize}</span>
+                `;
+            }
+        }
+        
+        // Delete confirmation
+        document.querySelector('.btn-delete').addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to delete this content? This action cannot be undone.')) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}

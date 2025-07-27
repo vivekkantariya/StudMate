@@ -18,425 +18,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-
-    <style>
-        :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3f37c9;
-            --dark-color: #1c1f2e;
-            --light-color: #f8f9fa;
-            --gray-color: #6c757d;
-            --success-color: #4cc9f0;
-            --warning-color: #f8961e;
-            --danger-color: #f72585;
-            --sidebar-width: 250px;
-            --sidebar-collapsed-width: 80px;
-            --transition-speed: 0.3s;
-
-            /* Light mode colors */
-            --bg-color: #f5f7fb;
-            --text-color: #333;
-            --card-bg: white;
-            --shadow-color: rgba(0, 0, 0, 0.1);
-            --border-color: #e0e0e0;
-        }
-
-        /* Dark mode colors */
-        [data-theme="dark"] {
-            --bg-color: #1a1c23;
-            --text-color: #f0f2f5;
-            --card-bg: #252a33;
-            --shadow-color: rgba(0, 0, 0, 0.3);
-            --border-color: #3a3f4b;
-            --light-color: #2d323d;
-            --gray-color: #8d99ae;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Navbar Styles */
-        .navbar {
-            background-color: var(--card-bg);
-            box-shadow: 0 2px 10px var(--shadow-color);
-            padding: 0.8rem 1.5rem;
-            position: sticky;
-            top: 0;
-            z-index: 1030;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            margin-left: 40px;
-            height: auto;
-            color: var(--primary-color);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .navbar-brand img {
-            height: 40px;
-        }
-
-        .navbar-brand span {
-            white-space: nowrap;
-        }
-
-        .search-bar {
-            flex-grow: 1;
-            max-width: 600px;
-            margin: 0 2rem;
-            position: relative;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 0.5rem 1rem 0.5rem 2.5rem;
-            border-radius: 50px;
-            border: 1px solid var(--border-color);
-            background-color: var(--light-color);
-            color: var(--text-color);
-            transition: all 0.3s ease;
-        }
-
-        .search-bar input:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-            background-color: var(--card-bg);
-        }
-
-        .search-bar i {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray-color);
-        }
-
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-login {
-            background: none;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .btn-login:hover {
-            background-color: rgba(67, 97, 238, 0.1);
-        }
-
-        .btn-signup {
-            background-color: var(--primary-color);
-            border: none;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .btn-signup:hover {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-
-        .btn-logout {
-            background-color: var(--danger-color);
-            border: none;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-
-        .btn-logout:hover {
-            background-color: #d63384;
-            color: white;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-color);
-            font-weight: 500;
-        }
-
-        .nav-btn {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.1rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .nav-btn:hover {
-            background-color: rgba(67, 97, 238, 0.1);
-            color: var(--primary-color);
-        }
-
-        .badge-notification {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background-color: var(--danger-color);
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .profile-pic {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            object-fit: cover;
-            cursor: pointer;
-            border: 2px solid var(--border-color);
-            transition: border-color 0.3s ease;
-        }
-
-        .profile-pic:hover {
-            border-color: var(--primary-color);
-        }
-
-        .theme-toggle {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .theme-toggle:hover {
-            color: var(--primary-color);
-        }
-
-        /* Sidebar Styles */
-        .main-container {
-            display: flex;
-            flex: 1;
-        }
-
-        .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--card-bg);
-            box-shadow: 2px 0 10px var(--shadow-color);
-            transition: width var(--transition-speed) ease;
-            height: calc(100vh - 60px);
-            position: sticky;
-            top: 60px;
-            overflow-y: auto;
-            padding: 1.5rem 0;
-        }
-
-        .sidebar.collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
-
-        .sidebar-header {
-            padding: 0 1.5rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .sidebar-header h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--gray-color);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-
-        .sidebar-header .toggle-btn {
-            background: none;
-            border: none;
-            color: var(--gray-color);
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 0.25rem;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1.5rem;
-            color: var(--text-color);
-            text-decoration: none;
-            border-radius: 0 50px 50px 0;
-            margin-right: 1rem;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .sidebar-menu a:hover {
-            background-color: rgba(67, 97, 238, 0.1);
-            color: var(--primary-color);
-        }
-
-        .sidebar-menu a.active {
-            background-color: rgba(67, 97, 238, 0.1);
-            color: var(--primary-color);
-            font-weight: 500;
-        }
-
-        .sidebar-menu i {
-            margin-right: 1rem;
-            font-size: 1.1rem;
-            width: 24px;
-            text-align: center;
-        }
-
-        .sidebar.collapsed .sidebar-header h3,
-        .sidebar.collapsed .sidebar-menu span {
-            display: none;
-        }
-
-        .sidebar.collapsed .sidebar-menu a {
-            justify-content: center;
-            padding: 0.75rem;
-            margin-right: 0;
-            border-radius: 50%;
-        }
-
-        .sidebar.collapsed .sidebar-menu i {
-            margin-right: 0;
-            font-size: 1.3rem;
-        }
-
-        /* Main Content Styles */
-        .main-content {
-            flex: 1;
-            padding: 2rem;
-            transition: margin-left var(--transition-speed) ease;
-        }
-
-        .sidebar.collapsed~.main-content {
-            margin-left: var(--sidebar-collapsed-width);
-        }
-
-        /* Responsive Styles */
-        @media (max-width: 992px) {
-            .sidebar {
-                position: fixed;
-                z-index: 1020;
-                left: 0;
-                top: 60px;
-                height: calc(100vh - 60px);
-                transform: translateX(-100%);
-                transition: transform var(--transition-speed) ease;
-            }
-
-            .sidebar.show {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0 !important;
-            }
-
-            .search-bar {
-                margin: 0 1rem;
-            }
-
-            .auth-buttons {
-                display: none;
-            }
-
-            .user-info {
-                display: none;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .search-bar {
-                display: none;
-            }
-
-            .navbar-brand span {
-                display: none;
-            }
-        }
-
-        /* Mobile Menu Button */
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.5rem;
-            margin-right: 1rem;
-        }
-
-        @media (max-width: 992px) {
-            .mobile-menu-btn {
-                display: block;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}">
 </head>
 
-<body>
+<body class="{{ request.user.userprofile.dark_mode|yesno:'dark-theme,' }}">
+    
     <!-- Navbar -->
     <header class="navbar">
         <button class="mobile-menu-btn" id="mobileMenuBtn">
@@ -453,27 +39,21 @@
         </div>
 
         <div class="nav-actions">
-            <!-- Show when user is logged in -->
-
             <button class="nav-btn" id="notificationBtn">
                 <i class="fas fa-bell"></i>
                 <span class="badge-notification">3</span>
             </button>
 
             {% if user.is_authenticated %}
-
             <a href="{% url 'profileview' %}" class="user-info">
                 <i class="fas fa-user"></i>
                 <span>{{ user.username }}</span>
             </a>
-            <form method="post" action="{% url 'logout' %}">
+            <form method="post" action="{% url 'logout' %}" class="logout-form">
                 {% csrf_token %}
-                <button type="submit">Logout</button>
+                <button type="submit" class="btn-logout">Logout</button>
             </form>
-
             {% else %}
-
-            <!-- Show when user is not logged in -->
             <div class="auth-buttons">
                 <a href="{% url 'login' %}" class="btn-login">Login</a>
                 <a href="{% url 'register' %}" class="btn-signup">Sign Up</a>
@@ -499,20 +79,20 @@
 
             <ul class="sidebar-menu">
                 <li>
-                    <a href="{% url 'home' %}" class="active">
+                    <a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">
                         <i class="fas fa-compass"></i>
                         <span>Browse</span>
                     </a>
                 </li>
                 {% if user.is_authenticated %}
                 <li>
-                    <a href="{% url 'my_upload' %}">
+                    <a href="{% url 'my_upload' %}" class="{% if request.path == '/my-uploads/' %}active{% endif %}">
                         <i class="fas fa-cloud-upload-alt"></i>
                         <span>My Uploads</span>
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'my_bookmarks' %}">
+                    <a href="{% url 'my_bookmarks' %}" class="{% if request.path == '/bookmarks/' %}active{% endif %}">
                         <i class="fas fa-bookmark"></i>
                         <span>Bookmarks</span>
                     </a>
@@ -531,96 +111,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Custom JS -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Theme toggle functionality
-            const themeToggle = document.getElementById('themeToggle');
-            const icon = themeToggle.querySelector('i');
-
-            // Check for saved theme preference or use preferred color scheme
-            const savedTheme = localStorage.getItem('theme') ||
-                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-
-            // Apply the saved theme
-            if (savedTheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-            }
-
-            // Toggle theme
-            themeToggle.addEventListener('click', function () {
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-
-                if (currentTheme === 'dark') {
-                    document.documentElement.removeAttribute('data-theme');
-                    icon.classList.remove('fa-sun');
-                    icon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'light');
-                } else {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    icon.classList.remove('fa-moon');
-                    icon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'dark');
-                }
-            });
-
-            // Sidebar toggle functionality
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-
-            // Toggle sidebar collapse/expand
-            sidebarToggle.addEventListener('click', function () {
-                sidebar.classList.toggle('collapsed');
-
-                // Change icon based on state
-                const icon = this.querySelector('i');
-                if (sidebar.classList.contains('collapsed')) {
-                    icon.classList.remove('fa-chevron-left');
-                    icon.classList.add('fa-chevron-right');
-                } else {
-                    icon.classList.remove('fa-chevron-right');
-                    icon.classList.add('fa-chevron-left');
-                }
-            });
-
-            // Mobile menu toggle
-            mobileMenuBtn.addEventListener('click', function () {
-                sidebar.classList.toggle('show');
-            });
-
-            // Close sidebar when clicking outside on mobile
-            document.addEventListener('click', function (event) {
-                if (window.innerWidth <= 992 &&
-                    !sidebar.contains(event.target) &&
-                    event.target !== mobileMenuBtn &&
-                    !mobileMenuBtn.contains(event.target)) {
-                    sidebar.classList.remove('show');
-                }
-            });
-
-            // Notification button functionality (only if user is logged in)
-            const notificationBtn = document.getElementById('notificationBtn');
-            if (notificationBtn) {
-                notificationBtn.addEventListener('click', function () {
-                    // Implement notification dropdown
-                    alert('Notification dropdown would open here');
-                });
-            }
-
-            // Set active menu item based on current page
-            const currentPath = window.location.pathname;
-            const menuItems = document.querySelectorAll('.sidebar-menu a');
-
-            menuItems.forEach(item => {
-                item.classList.remove('active');
-                if (item.getAttribute('href') === currentPath) {
-                    item.classList.add('active');
-                }
-            });
-        });
-    </script>
+    <script src="{% static 'js/main.js' %}"></script>
 </body>
 
 </html>

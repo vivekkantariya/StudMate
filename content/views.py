@@ -2,12 +2,17 @@ from .forms import CustomUserForm, ContentForm
 from django.contrib.auth import login , logout as django_logout
 from django.contrib.auth.models import User 
 from django.contrib.auth.decorators import login_required 
+from django.views.decorators.http import require_POST
 from .models import Content
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
 from .forms import ProfileForm
 from django.contrib import messages
+
+from django.shortcuts import render, get_object_or_404
+from django.db import models
+from .models import Content  # adjust the import path based on your project structure
 
 
 # Create your views here.
@@ -64,7 +69,6 @@ def bookmarked_contents(request):
     for c in contents:
         c.is_bookmarked = True
     return render(request, 'content/my_bookmarks.html', {'contents': contents})
-
 
 def content_list(request):
     print("=== DEBUG: Starting content_list view ===")
@@ -157,11 +161,19 @@ def content_list(request):
     print(f"DEBUG: Context values - total_resources: {context['total_resources']}, active_users: {context['active_users']}, total_downloads: {context['total_downloads']}")
     
     return render(request, 'content/home.html', context)
-# View: Content detail
+
 def content_detail(request, pk):
     item = get_object_or_404(Content, pk=pk)
+    
+    # Get related resources based on tags or content type
+    related_resources = Content.objects.filter(
+        models.Q(content_type=item.content_type) | 
+        models.Q(tags__icontains=item.tags.split(',')[0] if item.tags else '')
+    ).exclude(pk=item.pk).distinct()[:5]
+    
     context = {
-        'item': item
+        'item': item,
+        'related_resources': related_resources
     }
     return render(request, 'content/content_detail.html', context)
 
@@ -191,7 +203,19 @@ def my_upload(request):
 @login_required
 def profile_view(request):
     profile = request.user.profile
-    return render(request, 'profile/view.html', {'profile': profile})
+    uploads = Content.objects.filter(author=request.user)
+    bookmarks = Bookmark.objects.filter(user=request.user).select_related('content')
+    bookmarked_contents = [b.content for b in bookmarks]
+
+    # Set bookmark flag (optional for template logic)
+    for c in bookmarked_contents:
+        c.is_bookmarked = True
+
+    return render(request, 'profile/view.html', {
+        'profile': profile,
+        'uploads': uploads,
+        'bookmarks': bookmarked_contents,
+    })
 
 @login_required
 def profile_edit(request):
@@ -205,3 +229,36 @@ def profile_edit(request):
         form = ProfileForm(instance=request.user.profile)
     
     return render(request, 'profile/edit.html', {'form': form})
+
+def content_edit(request, pk):
+    content = get_object_or_404(Content, pk=pk)
+
+    # Ensure only the author can edit
+    if request.user != content.author:
+        messages.error(request, "You are not authorized to edit this content.")
+        return redirect('content_detail', pk=pk)
+
+    if request.method == 'POST':
+        form = ContentForm(request.POST, request.FILES, instance=content)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Content updated successfully.")
+            return redirect('content_detail', pk=content.pk)
+    else:
+        form = ContentForm(instance=content)
+
+    return render(request, 'content/content_edit.html', {'form': form, 'content': content})
+
+
+@login_required
+@require_POST
+def content_delete(request, pk):
+    content = get_object_or_404(Content, pk=pk)
+
+    if request.user != content.author:
+        messages.error(request, "You are not authorized to delete this content.")
+        return redirect('content_detail', pk=pk)
+
+    content.delete()
+    messages.success(request, "Content deleted successfully.")
+    return redirect('home')  # Or wherever your content list is

@@ -1,113 +1,368 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Bookmarks</title>
+{% extends "layout.html" %}
+{% block content %}
 
-    <!-- Bootstrap 5 CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/bookmarks.css' %}">
 
-    <style>
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease-in-out;
-        }
-    </style>
-</head>
-<body class="bg-light">
+<div class="bookmarks-page container-fluid px-lg-5">
+    <!-- Page Header -->
+    <div class="page-header row align-items-end g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="header-content">
+                <h1 class="page-title">
+                    <i class="fas fa-bookmark text-primary me-2"></i> My Saved Resources
+                </h1>
+                <p class="page-subtitle text-muted mb-4">
+                    Quickly access all your bookmarked study materials in one place
+                </p>
+                <div class="header-actions d-flex flex-wrap gap-3">
+                    <a href="{% url 'content_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-search me-2"></i> Browse More
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" id="sortDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-sort me-2"></i> Sort By
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?sort=-date">Newest First</a></li>
+                            <li><a class="dropdown-item" href="?sort=date">Oldest First</a></li>
+                            <li><a class="dropdown-item" href="?sort=-rate">Highest Rated</a></li>
+                            <li><a class="dropdown-item" href="?sort=-download_count">Most Downloaded</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="header-stats d-flex justify-content-lg-end">
+                <div class="stat-card d-flex align-items-center p-3 rounded-3 shadow-sm">
+                    <div class="stat-icon bg-primary-light rounded-3 d-flex align-items-center justify-content-center me-3">
+                        <i class="fas fa-bookmark text-primary fs-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">{{ contents|length }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <div class="container py-5">
-        <h2 class="mb-4 text-center fw-bold">📚 My Bookmarked Resources</h2>
-
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            {% for item in contents %}
-            <div class="col">
-                <div class="card h-100 shadow-sm border-0">
-                    <!-- File Type Icon -->
-                    <div class="position-relative text-center py-4 bg-light">
+    <!-- Bookmarks Grid -->
+    {% if contents %}
+    <div class="bookmarks-grid row g-4">
+        {% for item in contents %}
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="bookmark-card card h-100 border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <!-- File Type Indicator -->
+                    <div class="file-type d-flex align-items-center">
                         {% if item.file %}
                             {% if item.file.name|slice:"-4:" == '.pdf' %}
-                                <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                            <div class="file-icon pdf d-flex align-items-center me-2">
+                                <i class="fas fa-file-pdf me-2 fs-5"></i>
+                                <span class="small fw-medium">PDF</span>
+                            </div>
                             {% elif item.file.name|slice:"-5:" == '.docx' %}
-                                <i class="fas fa-file-word fa-3x text-primary"></i>
+                            <div class="file-icon word d-flex align-items-center me-2">
+                                <i class="fas fa-file-word me-2 fs-5"></i>
+                                <span class="small fw-medium">DOCX</span>
+                            </div>
                             {% elif item.file.name|slice:"-4:" == '.zip' %}
-                                <i class="fas fa-file-archive fa-3x text-warning"></i>
+                            <div class="file-icon archive d-flex align-items-center me-2">
+                                <i class="fas fa-file-archive me-2 fs-5"></i>
+                                <span class="small fw-medium">ZIP</span>
+                            </div>
                             {% else %}
-                                <i class="fas fa-file-alt fa-3x text-success"></i>
+                            <div class="file-icon generic d-flex align-items-center me-2">
+                                <i class="fas fa-file-alt me-2 fs-5"></i>
+                                <span class="small fw-medium">FILE</span>
+                            </div>
                             {% endif %}
                         {% else %}
-                            <i class="fas fa-file-alt fa-3x text-secondary"></i>
-                        {% endif %}
-
-                        <!-- Badge for Type -->
-                        <span class="badge bg-dark text-white position-absolute top-0 start-0 m-2">
-                            {{ item.get_content_type_display }}
-                        </span>
-
-                        <!-- Author -->
-                        <span class="badge bg-primary position-absolute top-0 end-0 m-2">
-                            <i class="fas fa-user me-1"></i> {{ item.author.username }}
-                        </span>
-                    </div>
-
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between mb-2">
-                            <h5 class="card-title fw-bold">{{ item.name }}</h5>
-                            <div class="text-warning">
-                                <i class="fas fa-star"></i> {{ item.rate|floatformat:1 }}
+                            <div class="file-icon missing d-flex align-items-center me-2">
+                                <i class="fas fa-exclamation-circle me-2 fs-5"></i>
+                                <span class="small fw-medium">No File</span>
                             </div>
-                        </div>
+                        {% endif %}
+                    </div>
 
-                        <p class="text-muted small mb-2">
-                            <i class="far fa-calendar-alt me-1"></i> {{ item.date|date:"M d, Y" }}
-                            {% if item.download_count %}
-                            <span class="ms-2"><i class="fas fa-download me-1"></i>{{ item.download_count }}</span>
+                    <!-- Content Type Badge -->
+                    <div class="content-type">
+                        <span class="badge bg-secondary bg-opacity-10 text-dark fw-medium">{{ item.get_content_type_display }}</span>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <form action="{% url 'toggle_bookmark' item.id %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-bookmark active" title="Remove bookmark">
+                                <i class="fas fa-bookmark"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card-body d-flex flex-column">
+                    <!-- Author Info -->
+                    <div class="author-info d-flex align-items-center mb-3">
+                        <div class="avatar rounded-circle overflow-hidden me-3">
+                            {% if item.author.profile.avatar %}
+                            <img src="{{ item.author.profile.avatar.url }}" alt="{{ item.author.username }}" class="img-fluid">
+                            {% else %}
+                            <span class="d-flex align-items-center justify-content-center w-100 h-100 bg-light text-primary fw-bold">{{ item.author.username|first|upper }}</span>
                             {% endif %}
-                        </p>
-
-                        <p class="text-muted small">{{ item.desc|truncatechars:100 }}</p>
-
-                        <div class="mb-2">
-                            {% for tag in item.tag_list %}
-                                <span class="badge bg-secondary-subtle text-dark me-1">{{ tag }}</span>
-                            {% endfor %}
+                        </div>
+                        <div>
+                            <h6 class="author-name mb-0 fw-medium">{{ item.author.username }}</h6>
+                            <p class="upload-date text-muted small mb-0">{{ item.date|date:"M d, Y" }}</p>
                         </div>
                     </div>
 
-                    <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center">
-                        <a href="{% url 'content_detail' item.id %}" class="btn btn-outline-primary btn-sm rounded-pill">
-                            <i class="far fa-eye me-1"></i> View
-                        </a>
+                    <!-- Content Details -->
+                    <h3 class="content-title fs-5 fw-bold mb-2">{{ item.name }}</h3>
+                    <p class="content-description text-muted mb-3">{{ item.desc|truncatechars:120 }}</p>
 
+                    <!-- Stats -->
+                    <div class="content-stats d-flex gap-3 mb-3">
+                        <div class="stat d-flex align-items-center text-muted small">
+                            <i class="fas fa-download me-1"></i>
+                            <span>{{ item.download_count|default:"0" }} downloads</span>
+                        </div>
+                        <div class="stat d-flex align-items-center text-muted small">
+                            <i class="fas fa-star text-warning me-1"></i>
+                            <span>{{ item.rate|floatformat:1 }} rating</span>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    {% if item.tag_list %}
+                    <div class="content-tags mt-auto d-flex flex-wrap gap-2">
+                        {% for tag in item.tag_list|slice:":3" %}
+                        <span class="tag badge bg-light text-dark fw-normal">{{ tag }}</span>
+                        {% endfor %}
+                        {% if item.tag_list|length > 3 %}
+                        <span class="tag badge bg-primary text-white">+{{ item.tag_list|length|add:"-3" }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer bg-light border-top">
+                    <div class="actions d-flex gap-2">
+                        <a href="{% url 'content_detail' item.id %}" class="btn btn-outline-primary flex-grow-1">
+                            <i class="fas fa-eye me-1"></i> View Details
+                        </a>
                         {% if item.file %}
-                        <a href="{{ item.file.url }}" download class="btn btn-sm btn-primary rounded-pill">
+                        <a href="{{ item.file.url }}" download class="btn btn-primary flex-grow-1">
                             <i class="fas fa-download me-1"></i> Download
                         </a>
                         {% else %}
-                        <button class="btn btn-sm btn-secondary rounded-pill disabled">
+                        <button class="btn btn-secondary disabled flex-grow-1">
                             <i class="fas fa-ban me-1"></i> No File
                         </button>
                         {% endif %}
                     </div>
                 </div>
             </div>
-            {% empty %}
-            <div class="col-12 text-center py-5">
-                <i class="far fa-bookmark fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">No bookmarks yet</h4>
-                <p class="text-muted">You haven't saved any resources yet.</p>
-                <a href="{% url 'content_list' %}" class="btn btn-primary rounded-pill px-4">
-                    <i class="fas fa-search me-2"></i>Browse Content
-                </a>
-            </div>
-            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state text-center py-5 px-3 bg-white rounded-3 shadow-sm">
+        <div class="empty-icon mb-4">
+            <i class="fas fa-bookmark text-primary opacity-75" style="font-size: 4rem;"></i>
+        </div>
+        <h3 class="mb-3">No Bookmarks Yet</h3>
+        <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
+            You haven't saved any resources yet. Start exploring and bookmark your favorite study materials!
+        </p>
+        <div class="empty-actions d-flex justify-content-center gap-3">
+            <a href="{% url 'content_list' %}" class="btn btn-primary">
+                <i class="fas fa-search me-2"></i> Browse Resources
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                <i class="fas fa-home me-2"></i> Go to Home
+            </a>
         </div>
     </div>
+    {% endif %}
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="pagination-wrapper mt-5">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                    <i class="fas fa-chevron-left me-1"></i> Previous
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1">
+                    <i class="fas fa-chevron-left me-1"></i> Previous
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <a class="page-link" href="#">{{ num }}</a>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                    {{ num }}
+                </a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                    Next <i class="fas fa-chevron-right ms-1"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1">
+                    Next <i class="fas fa-chevron-right ms-1"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    /* Base Styles */
+    .bookmarks-page {
+        padding: 2rem 0;
+    }
+
+    /* Header Styles */
+    .page-header {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1.5rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    /* Stat Card */
+    .stat-card {
+        background: white;
+        min-width: 180px;
+    }
+
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+    }
+
+    /* Bookmark Card */
+    .bookmark-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .bookmark-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    /* File Type Icons */
+    .file-icon.pdf { color: #e63946; }
+    .file-icon.word { color: #2b579a; }
+    .file-icon.archive { color: #f8961e; }
+    .file-icon.generic { color: #4361ee; }
+    .file-icon.missing { color: #6c757d; }
+
+    /* Quick Actions */
+    .quick-actions .btn-bookmark {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        color: #4361ee;
+        background: rgba(67, 97, 238, 0.1);
+        border: none;
+    }
+
+    .quick-actions .btn-bookmark.active {
+        color: white;
+        background: #4361ee;
+    }
+
+    /* Empty State */
+    .empty-state {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 1.75rem;
+        }
+        
+        .header-actions {
+            flex-direction: column;
+        }
+        
+        .header-actions .btn {
+            width: 100%;
+        }
+        
+        .empty-actions {
+            flex-direction: column;
+        }
+        
+        .empty-actions .btn {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .card-footer .actions {
+            flex-direction: column;
+        }
+        
+        .card-footer .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    // Bookmark removal confirmation
+    document.addEventListener('DOMContentLoaded', function() {
+        const bookmarkButtons = document.querySelectorAll('.btn-bookmark');
+        
+        bookmarkButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (this.classList.contains('active')) {
+                    if (!confirm('Are you sure you want to remove this bookmark?')) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+    });
+</script>
+
+{% endblock %}

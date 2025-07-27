@@ -1,25 +1,45 @@
 {% extends 'layout.html' %}
-
+{% load static %}
 {% block content %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
 <div class="profile-container">
     <div class="profile-wrapper">
         <!-- Profile Header -->
         <div class="profile-header">
-            <div class="profile-avatar">
-                <img src="{{ profile.avatar.url|default:'/static/images/default-avatar.png' }}" 
-                     alt="Profile Avatar" class="avatar-image">
-                <div class="avatar-overlay">
-                    <i class="fas fa-camera"></i>
+            <div class="header-background"></div>
+            <div class="header-content">
+                <div class="profile-avatar">
+                    {% load static %}
+                    <img src="{% if profile.avatar %}{{ profile.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}"
+                        alt="Profile Avatar" class="avatar-image">
+                    <div class="avatar-overlay">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <div class="avatar-status"></div>
                 </div>
-            </div>
-            <div class="profile-info">
-                <h1 class="profile-name">{{ user.username }}</h1>
-                <p class="profile-institution">{{ profile.institution|default:"No institution specified" }}</p>
-                <div class="profile-actions">
-                    <a href="{% url 'profileedit' %}" class="btn btn-primary">
-                        <i class="fas fa-edit"></i>
-                        Edit Profile
-                    </a>
+                <div class="profile-info">
+                    <h1 class="profile-name">{{ user.username }}</h1>
+                    <p class="profile-institution">{{ profile.institution|default:"No institution specified" }}</p>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">{{ uploads|length }}</span>
+                            <span class="stat-label">Uploads</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">{{ bookmarks|length }}</span>
+                            <span class="stat-label">Bookmarks</span>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <a href="{% url 'profileedit' %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i>
+                            Edit Profile
+                        </a>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-share-alt"></i>
+                            Share
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -29,23 +49,21 @@
             <nav class="nav-tabs">
                 <button class="nav-tab active" data-tab="overview">
                     <i class="fas fa-user"></i>
-                    Overview
+                    <span>Overview</span>
                 </button>
                 <button class="nav-tab" data-tab="uploads">
                     <i class="fas fa-upload"></i>
-                    My Uploads
+                    <span>My Uploads</span>
+                    <span class="nav-badge">{{ uploads|length }}</span>
                 </button>
                 <button class="nav-tab" data-tab="bookmarks">
                     <i class="fas fa-bookmark"></i>
-                    Bookmarks
+                    <span>Bookmarks</span>
+                    <span class="nav-badge">{{ bookmarks|length }}</span>
                 </button>
                 <button class="nav-tab" data-tab="activity">
-                    <i class="fas fa-history"></i>
-                    Activity
-                </button>
-                <button class="nav-tab" data-tab="settings">
-                    <i class="fas fa-cog"></i>
-                    Settings
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
                 </button>
             </nav>
         </div>
@@ -56,22 +74,22 @@
             <div class="tab-content active" id="overview">
                 <div class="content-grid">
                     <!-- About Section -->
-                    <div class="content-card full-width">
+                    <div class="content-card about-card">
                         <div class="card-header">
                             <h3 class="card-title">
                                 <i class="fas fa-info-circle"></i>
-                                About
+                                About Me
                             </h3>
                         </div>
                         <div class="card-body">
                             {% if profile.bio %}
-                                <p class="bio-text">{{ profile.bio }}</p>
+                            <p class="bio-text">{{ profile.bio }}</p>
                             {% else %}
-                                <div class="empty-state">
-                                    <i class="fas fa-user-edit"></i>
-                                    <p>Add a bio to tell others about yourself</p>
-                                    <a href="{% url 'profileedit' %}" class="btn btn-outline">Add Bio</a>
-                                </div>
+                            <div class="empty-state compact">
+                                <i class="fas fa-user-edit"></i>
+                                <p>Add a bio to tell others about yourself</p>
+                                <a href="{% url 'profileedit' %}" class="btn btn-outline">Add Bio</a>
+                            </div>
                             {% endif %}
                         </div>
                     </div>
@@ -85,18 +103,33 @@
                             </h3>
                         </div>
                         <div class="card-body">
-                            <div class="info-list">
+                            <div class="info-grid">
                                 <div class="info-item">
-                                    <span class="info-label">Institution</span>
-                                    <span class="info-value">{{ profile.institution|default:"Not specified" }}</span>
+                                    <div class="info-icon">
+                                        <i class="fas fa-university"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Institution</span>
+                                        <span class="info-value">{{ profile.institution|default:"Not specified" }}</span>
+                                    </div>
                                 </div>
                                 <div class="info-item">
-                                    <span class="info-label">Course/Program</span>
-                                    <span class="info-value">{{ profile.course|default:"Not specified" }}</span>
+                                    <div class="info-icon">
+                                        <i class="fas fa-book"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Course/Program</span>
+                                        <span class="info-value">{{ profile.course|default:"Not specified" }}</span>
+                                    </div>
                                 </div>
                                 <div class="info-item">
-                                    <span class="info-label">Semester/Year</span>
-                                    <span class="info-value">{{ profile.semester|default:"Not specified" }}</span>
+                                    <div class="info-icon">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Semester/Year</span>
+                                        <span class="info-value">{{ profile.semester|default:"Not specified" }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -111,467 +144,362 @@
                             </h3>
                         </div>
                         <div class="card-body">
-                            <div class="info-list">
+                            <div class="info-grid">
                                 <div class="info-item">
-                                    <span class="info-label">Email</span>
-                                    <span class="info-value">{{ user.email }}</span>
+                                    <div class="info-icon">
+                                        <i class="fas fa-envelope"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Email</span>
+                                        <span class="info-value">{{ user.email }}</span>
+                                    </div>
                                 </div>
                                 <div class="info-item">
-                                    <span class="info-label">Website</span>
-                                    {% if profile.website %}
+                                    <div class="info-icon">
+                                        <i class="fas fa-globe"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Website</span>
+                                        {% if profile.website %}
                                         <a href="{{ profile.website }}" target="_blank" class="info-link">
                                             {{ profile.website|truncatechars:30 }}
                                         </a>
-                                    {% else %}
+                                        {% else %}
                                         <span class="info-value text-muted">Not specified</span>
-                                    {% endif %}
+                                        {% endif %}
+                                    </div>
                                 </div>
                                 <div class="info-item">
-                                    <span class="info-label">Location</span>
-                                    <span class="info-value">{{ profile.location|default:"Not specified" }}</span>
+                                    <div class="info-icon">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Location</span>
+                                        <span class="info-value">{{ profile.location|default:"Not specified" }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Recent Activity -->
-                    <div class="content-card full-width">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-clock"></i>
-                                Recent Activity
-                            </h3>
+            <!-- Uploads Tab -->
+            <div class="tab-content" id="uploads">
+                <div class="tab-header">
+                    <h2>My Uploads</h2>
+                    <div class="tab-actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search uploads..." id="upload-search">
                         </div>
-                        <div class="card-body">
-                            <div class="empty-state">
-                                <i class="fas fa-clock"></i>
-                                <h4>No recent activity</h4>
-                                <p>Your uploads and downloads will appear here</p>
+                        <select class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="pdf">PDF</option>
+                            <option value="doc">Document</option>
+                            <option value="image">Image</option>
+                        </select>
+                    </div>
+                </div>
+
+                {% if uploads %}
+                <div class="content-list" id="uploads-list">
+                    {% for item in uploads %}
+                    <div class="content-item" data-type="{{ item.get_content_type_display|lower }}">
+                        <div class="item-thumbnail">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="item-content">
+                            <h4 class="item-title">{{ item.name }}</h4>
+                            <p class="item-description">{{ item.desc|truncatewords:15 }}</p>
+                            <div class="item-meta">
+                                <span class="item-date">{{ item.date|date:"M d, Y" }}</span>
+                                <span class="item-type">{{ item.get_content_type_display }}</span>
                             </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <a href="{{ item.file.url }}" class="action-btn" title="Download" download>
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <button class="action-btn" title="Share">
+                                <i class="fas fa-share"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h4>No uploads yet</h4>
+                    <p>Start sharing your documents with the community</p>
+                    <a href="#" class="btn btn-primary">Upload Your First Document</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Bookmarks Tab -->
+            <div class="tab-content" id="bookmarks">
+                <div class="tab-header">
+                    <h2>My Bookmarks</h2>
+                    <div class="tab-actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search bookmarks..." id="bookmark-search">
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Other tab contents would go here -->
-            <div class="tab-content" id="uploads">
-                <div class="empty-state">
-                    <i class="fas fa-upload"></i>
-                    <h4>No uploads yet</h4>
-                    <p>Start sharing your documents with the community</p>
+                {% if bookmarks %}
+                <div class="content-list" id="bookmarks-list">
+                    {% for item in bookmarks %}
+                    <div class="content-item">
+                        <div class="item-thumbnail">
+                            <i class="fas fa-bookmark"></i>
+                        </div>
+                        <div class="item-content">
+                            <h4 class="item-title">{{ item.name }}</h4>
+                            <p class="item-description">{{ item.desc|truncatewords:15 }}</p>
+                            <div class="item-meta">
+                                <span class="item-date">{{ item.date|date:"M d, Y" }}</span>
+                                <span class="item-type">{{ item.get_content_type_display }}</span>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <a href="{{ item.file.url }}" class="action-btn" title="Download" download>
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <button class="action-btn remove-bookmark" title="Remove Bookmark">
+                                <i class="fas fa-bookmark-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
-            </div>
-
-            <div class="tab-content" id="bookmarks">
+                {% else %}
                 <div class="empty-state">
                     <i class="fas fa-bookmark"></i>
                     <h4>No bookmarks yet</h4>
                     <p>Save interesting documents for later</p>
+                    <a href="#" class="btn btn-primary">Browse Documents</a>
                 </div>
+                {% endif %}
             </div>
 
+            <!-- Analytics Tab -->
             <div class="tab-content" id="activity">
-                <div class="empty-state">
-                    <i class="fas fa-history"></i>
-                    <h4>No activity yet</h4>
-                    <p>Your activity history will appear here</p>
+                <div class="tab-header">
+                    <h2>Analytics</h2>
                 </div>
-            </div>
-
-            <div class="tab-content" id="settings">
-                <div class="empty-state">
-                    <i class="fas fa-cog"></i>
-                    <h4>Settings</h4>
-                    <p>Account settings and preferences</p>
+                
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <div class="analytics-icon">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="analytics-content">
+                            <h3>Profile Views</h3>
+                            <p class="analytics-number">1,234</p>
+                            <span class="analytics-change positive">+12%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <div class="analytics-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="analytics-content">
+                            <h3>Downloads</h3>
+                            <p class="analytics-number">567</p>
+                            <span class="analytics-change positive">+8%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <div class="analytics-icon">
+                            <i class="fas fa-thumbs-up"></i>
+                        </div>
+                        <div class="analytics-content">
+                            <h3>Likes</h3>
+                            <p class="analytics-number">89</p>
+                            <span class="analytics-change positive">+15%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <div class="analytics-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="analytics-content">
+                            <h3>Engagement</h3>
+                            <p class="analytics-number">94%</p>
+                            <span class="analytics-change positive">+3%</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-/* Reset and Base Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-.profile-container {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 2rem 1rem;
-}
-
-.profile-wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-}
-
-/* Profile Header */
-.profile-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 3rem 2rem;
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.profile-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
-    background-size: 50px 50px;
-}
-
-.profile-avatar {
-    position: relative;
-    flex-shrink: 0;
-}
-
-.avatar-image {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
-}
-
-.avatar-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    cursor: pointer;
-}
-
-.profile-avatar:hover .avatar-overlay {
-    opacity: 1;
-}
-
-.profile-info {
-    flex: 1;
-    z-index: 1;
-}
-
-.profile-name {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.profile-institution {
-    font-size: 1.1rem;
-    opacity: 0.9;
-    margin-bottom: 1.5rem;
-}
-
-.profile-actions .btn {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    padding: 0.75rem 1.5rem;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-}
-
-.profile-actions .btn:hover {
-    background: white;
-    color: #667eea;
-    transform: translateY(-2px);
-}
-
-/* Navigation Tabs */
-.profile-nav {
-    background: white;
-    border-bottom: 1px solid #e9ecef;
-    padding: 0 2rem;
-}
-
-.nav-tabs {
-    display: flex;
-    gap: 2rem;
-    overflow-x: auto;
-}
-
-.nav-tab {
-    background: none;
-    border: none;
-    padding: 1rem 0;
-    color: #6c757d;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.nav-tab::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #667eea;
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-}
-
-.nav-tab.active,
-.nav-tab:hover {
-    color: #667eea;
-}
-
-.nav-tab.active::after {
-    transform: scaleX(1);
-}
-
-/* Profile Content */
-.profile-content {
-    padding: 2rem;
-}
-
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.content-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    align-items: start;
-}
-
-.content-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e9ecef;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.content-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.content-card.full-width {
-    grid-column: 1 / -1;
-}
-
-.card-header {
-    padding: 1.5rem;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #495057;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.card-title i {
-    color: #667eea;
-}
-
-.card-body {
-    padding: 1.5rem;
-}
-
-.bio-text {
-    line-height: 1.6;
-    color: #495057;
-    font-size: 1rem;
-}
-
-.info-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.info-label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.info-value {
-    font-size: 1rem;
-    color: #495057;
-    font-weight: 500;
-}
-
-.info-link {
-    color: #667eea;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.info-link:hover {
-    color: #5a6fd8;
-}
-
-.text-muted {
-    color: #6c757d !important;
-}
-
-/* Empty States */
-.empty-state {
-    text-align: center;
-    padding: 3rem 2rem;
-    color: #6c757d;
-}
-
-.empty-state i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    color: #dee2e6;
-}
-
-.empty-state h4 {
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
-    color: #495057;
-}
-
-.empty-state p {
-    margin-bottom: 1rem;
-}
-
-.btn-outline {
-    background: transparent;
-    color: #667eea;
-    border: 2px solid #667eea;
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    display: inline-block;
-}
-
-.btn-outline:hover {
-    background: #667eea;
-    color: white;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .profile-container {
-        padding: 1rem;
-    }
-    
-    .profile-header {
-        flex-direction: column;
-        text-align: center;
-        padding: 2rem 1rem;
-    }
-    
-    .profile-name {
-        font-size: 2rem;
-    }
-    
-    .profile-content {
-        padding: 1rem;
-    }
-    
-    .content-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .nav-tabs {
-        gap: 1rem;
-    }
-    
-    .nav-tab {
-        font-size: 0.875rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .profile-name {
-        font-size: 1.75rem;
-    }
-    
-    .card-body,
-    .card-header {
-        padding: 1rem;
-    }
-}
-</style>
-
 <script>
-// Tab switching functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const tabs = document.querySelectorAll('.nav-tab');
-    const contents = document.querySelectorAll('.tab-content');
-    
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const targetTab = this.getAttribute('data-tab');
-            
-            // Remove active class from all tabs and contents
-            tabs.forEach(t => t.classList.remove('active'));
-            contents.forEach(c => c.classList.remove('active'));
-            
-            // Add active class to clicked tab and corresponding content
-            this.classList.add('active');
-            document.getElementById(targetTab).classList.add('active');
+    // Tab switching functionality
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabs = document.querySelectorAll('.nav-tab');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function () {
+                const targetTab = this.getAttribute('data-tab');
+
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                contents.forEach(c => c.classList.remove('active'));
+
+                // Add active class to clicked tab and corresponding content
+                this.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
+
+        // Search functionality for uploads
+        const uploadSearch = document.getElementById('upload-search');
+        if (uploadSearch) {
+            uploadSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const items = document.querySelectorAll('#uploads-list .content-item');
+                
+                items.forEach(item => {
+                    const title = item.querySelector('.item-title').textContent.toLowerCase();
+                    const description = item.querySelector('.item-description').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Search functionality for bookmarks
+        const bookmarkSearch = document.getElementById('bookmark-search');
+        if (bookmarkSearch) {
+            bookmarkSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const items = document.querySelectorAll('#bookmarks-list .content-item');
+                
+                items.forEach(item => {
+                    const title = item.querySelector('.item-title').textContent.toLowerCase();
+                    const description = item.querySelector('.item-description').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Filter functionality
+        const filterSelect = document.querySelector('.filter-select');
+        if (filterSelect) {
+            filterSelect.addEventListener('change', function() {
+                const filterValue = this.value.toLowerCase();
+                const items = document.querySelectorAll('#uploads-list .content-item');
+                
+                items.forEach(item => {
+                    const itemType = item.getAttribute('data-type');
+                    
+                    if (!filterValue || itemType === filterValue) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Remove bookmark functionality
+        document.querySelectorAll('.remove-bookmark').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to remove this bookmark?')) {
+                    const item = this.closest('.content-item');
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-100%)';
+                    setTimeout(() => {
+                        item.remove();
+                    }, 300);
+                }
+            });
+        });
+
+        // Smooth scrolling for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add loading states to buttons
+        document.querySelectorAll('.btn, .action-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.classList.contains('no-loading')) {
+                    this.classList.add('loading');
+                    setTimeout(() => {
+                        this.classList.remove('loading');
+                    }, 1000);
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe content cards for staggered animations
+        document.querySelectorAll('.content-card, .content-item, .analytics-card').forEach((el, index) => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+            observer.observe(el);
         });
     });
-});
+
+    // Keyboard navigation for accessibility
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            document.body.classList.add('keyboard-navigation');
+        }
+    });
+
+    document.addEventListener('mousedown', function() {
+        document.body.classList.remove('keyboard-navigation');
+    });
 </script>
 {% endblock %}

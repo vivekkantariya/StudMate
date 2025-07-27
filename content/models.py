@@ -76,3 +76,15 @@ class Bookmark(models.Model):
         
     def __str__(self):
         return f"{self.user.username} bookmarked {self.content.name}"
+
+
+# ✅ 8. Rate Limits & Upload Quotas
+# To reduce spam:
+
+# Limit uploads per user per day
+# ✅ 9. Watermarking / Fingerprinting (optional)
+# To discourage reuploads and plagiarism:
+
+# Add a unique watermark to documents on upload
+
+# Embed user IDs invisibly (steganography / metadata)
