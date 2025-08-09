@@ -1,0 +1,91 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4>
+                        {% if list_type == 'followers' %}
+                            <i class="fas fa-users mr-2"></i> Followers of {{ profile_user.username }}
+                        {% else %}
+                            <i class="fas fa-user-friends mr-2"></i> {{ profile_user.username }} is Following
+                        {% endif %}
+                        <span class="badge badge-primary">{{ count }}</span>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if list_type == 'followers' %}
+                        {% if followers %}
+                            <div class="list-group">
+                                {% for user in followers %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}"
+                                                 class="rounded-circle mr-3" width="40" height="40" alt="{{ user.username }}">
+                                            <a href="{% url 'user_profile' user.id %}" class="text-decoration-none">
+                                                {{ user.username }}
+                                            </a>
+                                        </div>
+                                        {% if request.user != user %}
+                                            <form action="{% url 'follow_user' user.id %}" method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm {% if user.is_following %}btn-outline-secondary{% else %}btn-primary{% endif %}">
+                                                    {% if user.is_following %}
+                                                        <i class="fas fa-user-minus"></i> Unfollow
+                                                    {% else %}
+                                                        <i class="fas fa-user-plus"></i> Follow
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No followers yet.</p>
+                        {% endif %}
+                    {% else %}
+                        {% if following %}
+                            <div class="list-group">
+                                {% for user in following %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}"
+                                                 class="rounded-circle mr-3" width="40" height="40" alt="{{ user.username }}">
+                                            <a href="{% url 'user_profile' user.id %}" class="text-decoration-none">
+                                                {{ user.username }}
+                                            </a>
+                                        </div>
+                                        {% if request.user != user %}
+                                            <form action="{% url 'follow_user' user.id %}" method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm {% if user.is_following %}btn-outline-secondary{% else %}btn-primary{% endif %}">
+                                                    {% if user.is_following %}
+                                                        <i class="fas fa-user-minus"></i> Unfollow
+                                                    {% else %}
+                                                        <i class="fas fa-user-plus"></i> Follow
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">Not following anyone yet.</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'user_profile' profile_user.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

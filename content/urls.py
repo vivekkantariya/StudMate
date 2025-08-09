@@ -9,10 +9,14 @@ urlpatterns = [
     path('edit/<int:pk>/', views.content_edit, name='content_edit'),
     path('<int:pk>/', views.content_detail, name='content_detail'),
     path('myupload/',views.my_upload, name='my_upload'),
-    path('profileview/',views.profile_view, name='profileview'),
+    path('profile/<int:user_id>/', views.profile_view, name='profileview'),
     path('profileedit/',views.profile_edit, name='profileedit'),
     path('bookmark/<int:content_id>/', views.bookmark, name='toggle_bookmark'),
     path('mybookmark/', views.bookmarked_contents, name='my_bookmarks'),
     path('delete/<int:pk>/', views.content_delete, name='content_delete'),
+
+    path('search/api/', views.search_api, name='search_api'),
+    path('content/<int:content_id>/rate/', views.rate_content, name='rate_content'),
+    path('content/<int:pk>/report/', views.report_content, name='report_content'),
 
 ]

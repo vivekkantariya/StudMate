@@ -134,6 +134,25 @@
                     </div>
                 </div>
             </div>
+            <div class="rating">
+    <strong>Average:</strong> <span>{{ item.rate|floatformat:1 }}</span> / 5
+</div>
+
+{% if user.is_authenticated %}
+<form method="POST" action="{% url 'rate_content' item.id %}">
+    {% csrf_token %}
+    <label for="rating">Your rating:</label>
+    <select name="score" id="rating">
+        {% for i in "12345" %}
+        <option value="{{ i }}">{{ i }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Submit</button>
+</form>
+{% else %}
+<p><a href="{% url 'login' %}">Login</a> to rate this content.</p>
+{% endif %}
+
         </div>
 
         <!-- Author Section -->
@@ -289,17 +308,15 @@
         {% endif %}
 
         <!-- Report Card -->
-        <div class="sidebar-card">
-            <div class="sidebar-card-header">
-                <h4><i class="fas fa-flag me-2"></i>Report Issues</h4>
-            </div>
-            <div class="sidebar-card-body">
-                <p class="small text-muted">Found an issue with this content? Let us know.</p>
-                <button class="btn btn-sm btn-outline-danger w-100" onclick="reportContent()">
-                    <i class="fas fa-flag me-2"></i> Report Content
-                </button>
-            </div>
-        </div>
+        {% if user.is_authenticated %}
+    <a href="{% url 'report_content' item.pk %}" class="btn btn-danger btn-sm">
+        Report Content
+    </a>
+{% else %}
+    <p><a href="{% url 'login' %}">Login</a> to report content.</p>
+{% endif %}
+
+
     </div>
 </div>
 
@@ -415,35 +432,6 @@
         }
     }
 
-    // Report functionality
-    function reportContent() {
-        // In a real implementation, this would open a modal
-        const modal = document.createElement('div');
-        modal.className = 'report-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Report Content</h5>
-                    <button class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Please select the reason for reporting:</p>
-                    <div class="report-options">
-                        <label><input type="radio" name="reportReason" value="copyright"> Copyright violation</label>
-                        <label><input type="radio" name="reportReason" value="inappropriate"> Inappropriate content</label>
-                        <label><input type="radio" name="reportReason" value="spam"> Spam or misleading</label>
-                        <label><input type="radio" name="reportReason" value="other"> Other</label>
-                    </div>
-                    <textarea class="form-control mt-3" placeholder="Additional details (optional)"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="this.parentElement.parentElement.remove()">Cancel</button>
-                    <button class="btn btn-danger">Submit Report</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
 </script>
 
 {% endblock %}

@@ -1,26 +1,85 @@
-from .forms import CustomUserForm, ContentForm
-from django.contrib.auth import login , logout as django_logout
-from django.contrib.auth.models import User 
-from django.contrib.auth.decorators import login_required 
-from django.views.decorators.http import require_POST
-from .models import Content
-from django.shortcuts import render, get_object_or_404, redirect
-from django.core.paginator import Paginator
-from django.db.models import Q
-from .forms import ProfileForm
+from collections import Counter
+import re
+
 from django.contrib import messages
-
-from django.shortcuts import render, get_object_or_404
+from django.contrib.auth import login, logout as django_logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.db import models
-from .models import Content  # adjust the import path based on your project structure
+from django.db.models import Q, Sum, Count
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.http import require_POST
 
+from .forms import CustomUserForm, ContentForm, ProfileForm, ReportForm
+from .models import Content, Bookmark, Rating, ContentReport
 
-# Create your views here.
+from django.db.models import Avg
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+# Home view
 def home(request):
-    data = Content.objects.all()
-    return render(request,"content/home.html",{'data':data})
+    search_query = request.GET.get('search', '')
+    content_type = request.GET.get('content_type', '')
+    sort_by = request.GET.get('sort_by', '-date')
 
-# when we dealing with inbuilt django auth we want to use outer templates directory html for rendering 
+    contents = Content.objects.filter(is_public=True)
+
+    if search_query:
+        contents = contents.filter(
+            Q(name__icontains=search_query) |
+            Q(desc__icontains=search_query) |
+            Q(tags__icontains=search_query)
+        )
+
+    if content_type:
+        contents = contents.filter(content_type=content_type)
+
+    valid_sort_options = ['-date', 'date', '-rate', '-download_count', 'name']
+    if sort_by not in valid_sort_options:
+        sort_by = '-date'
+
+    contents = contents.order_by(sort_by)
+
+    user_bookmarked_ids = set()
+    if request.user.is_authenticated:
+        user_bookmarked_ids = set(
+            Bookmark.objects.filter(user=request.user, content__in=contents)
+            .values_list('content_id', flat=True)
+        )
+
+    for content in contents:
+        content.is_bookmarked = content.id in user_bookmarked_ids
+
+    paginator = Paginator(contents, 9)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    total_resources = Content.objects.filter(is_public=True).count()
+    active_users = User.objects.count()
+
+    content_counts = {
+        'total_resources': total_resources,
+        'active_users': active_users,
+        'note_count': Content.objects.filter(content_type='note', is_public=True).count(),
+        'assignment_count': Content.objects.filter(content_type='ass', is_public=True).count(),
+        'practical_count': Content.objects.filter(content_type='prac', is_public=True).count(),
+        'project_count': Content.objects.filter(content_type='project', is_public=True).count(),
+    }
+
+    context = {
+        'data': page_obj,
+        'page_obj': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
+        **content_counts,
+    }
+
+    return render(request, 'content/home.html', context)
+
+
+# Registration
 def register(request):
     if request.method == "POST":
         form = CustomUserForm(request.POST)
@@ -32,35 +91,26 @@ def register(request):
             return redirect('home')
     else:
         form = CustomUserForm()
-    
-    return render(request, "registration/register.html",{"form" : form})
+
+    return render(request, "registration/register.html", {"form": form})
 
 
 def logout_view(request):
     django_logout(request)
     return redirect('home')
 
-from django.db.models import Sum, Count
-from django.core.paginator import Paginator
-from django.shortcuts import render
-from django.db.models import Q
-from django.contrib.auth.models import User
-from .models import Content  # Make sure this import is correct
 
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Content, Bookmark
-
+# Bookmark system
 @login_required
 def bookmark(request, content_id):
     content = get_object_or_404(Content, id=content_id)
     bookmark, created = Bookmark.objects.get_or_create(user=request.user, content=content)
 
     if not created:
-        # Bookmark already exists, so remove it
         bookmark.delete()
 
-    return redirect(request.META.get('HTTP_REFERER', 'content_list'))  # Redirect back to previous page
+    return redirect(request.META.get('HTTP_REFERER', 'content_list'))
+
 
 @login_required
 def bookmarked_contents(request):
@@ -70,30 +120,31 @@ def bookmarked_contents(request):
         c.is_bookmarked = True
     return render(request, 'content/my_bookmarks.html', {'contents': contents})
 
+
+# Content list view
 def content_list(request):
-    print("=== DEBUG: Starting content_list view ===")
-    
     search_query = request.GET.get('search', '')
     content_type = request.GET.get('content_type', '')
     sort_by = request.GET.get('sort_by', '-date')
-    
+
     contents = Content.objects.filter(is_public=True)
-    
+
     if search_query:
         contents = contents.filter(
             Q(name__icontains=search_query) |
             Q(desc__icontains=search_query) |
             Q(tags__icontains=search_query)
         )
-    
+
     if content_type:
         contents = contents.filter(content_type=content_type)
-    
+
     valid_sort_options = ['-date', 'date', '-rate', '-download_count', 'name']
     if sort_by not in valid_sort_options:
         sort_by = '-date'
-    
+
     contents = contents.order_by(sort_by)
+
     user_bookmarked_ids = set()
     if request.user.is_authenticated:
         user_bookmarked_ids = set(
@@ -103,41 +154,15 @@ def content_list(request):
     for content in contents:
         content.is_bookmarked = content.id in user_bookmarked_ids
 
-    paginator = Paginator(contents, 9)    
+    paginator = Paginator(contents, 9)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
-    # DEBUG: Check if we have any content
-    print(f"DEBUG: Total Content objects in DB: {Content.objects.count()}")
-    print(f"DEBUG: Public Content objects: {Content.objects.filter(is_public=True).count()}")
-    print(f"DEBUG: Total User objects: {User.objects.count()}")
-    
-    # Calculate stats with detailed debugging
-    try:
-        total_resources = Content.objects.filter(is_public=True).count()
-        print(f"DEBUG: total_resources = {total_resources}")
-        
-        active_users = User.objects.count()
-        print(f"DEBUG: active_users = {active_users}")
-        
-        # Check if download_count field has any values
-        download_sum = Content.objects.filter(is_public=True).aggregate(
-            total=Sum('download_count')
-        )['total']
-        total_downloads = download_sum if download_sum is not None else 0
-        print(f"DEBUG: total_downloads = {total_downloads}")
-        
-        # Debug individual download counts
-        content_downloads = Content.objects.filter(is_public=True).values_list('name', 'download_count')
-        print(f"DEBUG: Individual download counts: {list(content_downloads)}")
-        
-    except Exception as e:
-        print(f"DEBUG: Error calculating stats: {e}")
-        total_resources = 0
-        active_users = 0
-        total_downloads = 0
-    
-    # Content type counts
+
+    total_resources = Content.objects.filter(is_public=True).count()
+    active_users = User.objects.count()
+    download_sum = Content.objects.filter(is_public=True).aggregate(total=Sum('download_count'))['total']
+    total_downloads = download_sum if download_sum else 0
+
     content_counts = {
         'total_resources': total_resources,
         'note_count': Content.objects.filter(content_type='note', is_public=True).count(),
@@ -145,9 +170,7 @@ def content_list(request):
         'practical_count': Content.objects.filter(content_type='prac', is_public=True).count(),
         'project_count': Content.objects.filter(content_type='project', is_public=True).count(),
     }
-    
-    print(f"DEBUG: content_counts = {content_counts}")
-    
+
     context = {
         'data': page_obj,
         'page_obj': page_obj,
@@ -156,28 +179,25 @@ def content_list(request):
         'total_downloads': total_downloads,
         **content_counts,
     }
-    
-    print(f"DEBUG: Final context keys: {list(context.keys())}")
-    print(f"DEBUG: Context values - total_resources: {context['total_resources']}, active_users: {context['active_users']}, total_downloads: {context['total_downloads']}")
-    
+
     return render(request, 'content/home.html', context)
 
+
+# Content detail
 def content_detail(request, pk):
     item = get_object_or_404(Content, pk=pk)
-    
-    # Get related resources based on tags or content type
     related_resources = Content.objects.filter(
-        models.Q(content_type=item.content_type) | 
-        models.Q(tags__icontains=item.tags.split(',')[0] if item.tags else '')
+        Q(content_type=item.content_type) |
+        Q(tags__icontains=item.tags.split(',')[0] if item.tags else '')
     ).exclude(pk=item.pk).distinct()[:5]
-    
-    context = {
+
+    return render(request, 'content/content_detail.html', {
         'item': item,
         'related_resources': related_resources
-    }
-    return render(request, 'content/content_detail.html', context)
+    })
 
-# View: Create new content
+
+# Create content
 def content_create(request):
     if request.method == 'POST':
         form = ContentForm(request.POST, request.FILES)
@@ -189,25 +209,22 @@ def content_create(request):
     else:
         form = ContentForm()
     return render(request, 'content/content_create.html', {'form': form})
-    
-def edit_content(request):
-    if request.method == 'POST':
-        pass
-    
+
+
 @login_required
 def my_upload(request):
     data = Content.objects.filter(author=request.user)
-    print("Data found:", data)  # check your server console
     return render(request, 'content/myupload.html', {'data': data})
 
-@login_required
-def profile_view(request):
-    profile = request.user.profile
-    uploads = Content.objects.filter(author=request.user)
-    bookmarks = Bookmark.objects.filter(user=request.user).select_related('content')
-    bookmarked_contents = [b.content for b in bookmarks]
 
-    # Set bookmark flag (optional for template logic)
+# Profile views
+@login_required
+def profile_view(request, user_id):
+    user_obj = get_object_or_404(User, id=user_id)
+    profile = user_obj.profile
+    uploads = Content.objects.filter(author=user_obj)
+    bookmarks = Bookmark.objects.filter(user=user_obj).select_related('content')
+    bookmarked_contents = [b.content for b in bookmarks]
     for c in bookmarked_contents:
         c.is_bookmarked = True
 
@@ -216,6 +233,7 @@ def profile_view(request):
         'uploads': uploads,
         'bookmarks': bookmarked_contents,
     })
+
 
 @login_required
 def profile_edit(request):
@@ -227,13 +245,13 @@ def profile_edit(request):
             return redirect('profileview')
     else:
         form = ProfileForm(instance=request.user.profile)
-    
+
     return render(request, 'profile/edit.html', {'form': form})
 
+
+# Edit content
 def content_edit(request, pk):
     content = get_object_or_404(Content, pk=pk)
-
-    # Ensure only the author can edit
     if request.user != content.author:
         messages.error(request, "You are not authorized to edit this content.")
         return redirect('content_detail', pk=pk)
@@ -250,15 +268,130 @@ def content_edit(request, pk):
     return render(request, 'content/content_edit.html', {'form': form, 'content': content})
 
 
+# Delete content
 @login_required
 @require_POST
 def content_delete(request, pk):
     content = get_object_or_404(Content, pk=pk)
-
     if request.user != content.author:
         messages.error(request, "You are not authorized to delete this content.")
         return redirect('content_detail', pk=pk)
 
     content.delete()
     messages.success(request, "Content deleted successfully.")
-    return redirect('home')  # Or wherever your content list is
+    return redirect('home')
+
+
+# ===== Search APIs =====
+def search_api(request):
+    query = request.GET.get('q', '').strip()
+    if not query:
+        return JsonResponse({'contents': [], 'users': [], 'tags': []})
+
+    contents = Content.objects.filter(
+        Q(name__icontains=query) |
+        Q(desc__icontains=query) |
+        Q(tags__icontains=query),
+        is_public=True
+    ).select_related('author').order_by('-date')[:5]
+
+    contents_data = [{
+        'id': c.id,
+        'name': c.name,
+        'desc': c.desc[:100] + ('...' if len(c.desc) > 100 else ''),
+        'content_type': c.content_type,
+        'date': c.date.isoformat(),
+        'author__username': c.author.username,
+        'download_count': c.download_count,
+        'rate': float(c.rate),
+        'tags': c.tags
+    } for c in contents]
+
+    users = User.objects.filter(
+        Q(username__icontains=query) |
+        Q(first_name__icontains=query) |
+        Q(last_name__icontains=query) |
+        Q(profile__bio__icontains=query) |
+        Q(profile__institution__icontains=query)
+    ).select_related('profile').annotate(
+        content_count=Count('contents', filter=Q(contents__is_public=True))
+    )[:3]
+
+    users_data = [{
+        'id': u.id,
+        'username': u.username,
+        'first_name': u.first_name,
+        'last_name': u.last_name,
+        'profile__bio': u.profile.bio if hasattr(u, 'profile') else '',
+        'profile__institution': u.profile.institution if hasattr(u, 'profile') else '',
+        'content_count': u.content_count
+    } for u in users]
+
+    tags_data = []
+    if len(query) >= 2:
+        all_tags = Content.objects.filter(is_public=True, tags__icontains=query).values_list('tags', flat=True)
+        tag_counter = Counter()
+        for tags_string in all_tags:
+            if tags_string:
+                tags = [t.strip().lower() for t in tags_string.split(',') if t.strip()]
+                for t in tags:
+                    if query.lower() in t:
+                        tag_counter[t] += 1
+        for tag, count in tag_counter.most_common(4):
+            tags_data.append({'name': tag.title(), 'count': count})
+
+    return JsonResponse({'contents': contents_data, 'users': users_data, 'tags': tags_data})
+
+@receiver([post_save, post_delete], sender=Rating)
+def update_content_rating(sender, instance, **kwargs):
+    content = instance.content
+    avg_rating = content.ratings.aggregate(avg=Avg('score'))['avg'] or 0
+    content.rate = round(avg_rating, 1)  # 1 decimal place
+    content.save(update_fields=['rate'])
+
+
+@login_required
+@require_POST
+def rate_content(request, content_id):
+    content = get_object_or_404(Content, pk=content_id)
+    try:
+        score = int(request.POST.get('score'))
+        if score < 1 or score > 5:
+            raise ValueError
+    except (ValueError, TypeError):
+        messages.error(request, "Invalid rating.")
+        return redirect('content_detail', pk=content_id)
+
+    Rating.objects.update_or_create(
+        user=request.user,
+        content=content,
+        defaults={'score': score}
+    )
+    messages.success(request, "Your rating has been submitted.")
+    return redirect('content_detail', pk=content_id)
+
+# views.py
+@login_required
+def report_content(request, pk):
+    content = get_object_or_404(Content, pk=pk)
+
+    if request.method == "POST":
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report, created = ContentReport.objects.get_or_create(
+                reporter=request.user,
+                content=content,
+                defaults=form.cleaned_data
+            )
+            if not created:
+                messages.warning(request, "You have already reported this content.")
+            else:
+                messages.success(request, "Report submitted. Our moderators will review it.")
+            return redirect('content_detail', pk=pk)
+    else:
+        form = ReportForm()
+
+    return render(request, 'content/report_content.html', {
+        'form': form,
+        'content': content
+    })

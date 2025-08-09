@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.forms import ValidationError
 
 class ContentType(models.TextChoices):
     PRACTICAL = "prac", "Practical"
@@ -65,7 +66,7 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     Profile.objects.get_or_create(user=instance)
     instance.profile.save()
-    
+
 class Bookmark(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmark')
     content = models.ForeignKey(Content, on_delete=models.CASCADE, related_name='bookmarked_by')
@@ -77,14 +78,38 @@ class Bookmark(models.Model):
     def __str__(self):
         return f"{self.user.username} bookmarked {self.content.name}"
 
+# models.py
+class Rating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.ForeignKey(Content, on_delete=models.CASCADE, related_name='ratings')
+    score = models.PositiveSmallIntegerField()  # 1 to 5
 
-# ✅ 8. Rate Limits & Upload Quotas
-# To reduce spam:
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-# Limit uploads per user per day
-# ✅ 9. Watermarking / Fingerprinting (optional)
-# To discourage reuploads and plagiarism:
+    class Meta:
+        unique_together = ('user', 'content')  # One rating per user per content
 
-# Add a unique watermark to documents on upload
+    def __str__(self):
+        return f"{self.user.username} rated {self.content.name} as {self.score}"
 
-# Embed user IDs invisibly (steganography / metadata)
+# models.py
+class ReportReason(models.TextChoices):
+    INAPPROPRIATE = "inappropriate", "Inappropriate Content"
+    SPAM = "spam", "Spam or Misleading"
+    COPYRIGHT = "copyright", "Copyright Violation"
+    OTHER = "other", "Other"
+
+class ContentReport(models.Model):
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports")
+    content = models.ForeignKey(Content, on_delete=models.CASCADE, related_name="reports")
+    reason = models.CharField(max_length=50, choices=ReportReason.choices)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_resolved = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('reporter', 'content')  # One report per user per content
+
+    def __str__(self):
+        return f"Report by {self.reporter.username} on {self.content.name} - {self.reason}"

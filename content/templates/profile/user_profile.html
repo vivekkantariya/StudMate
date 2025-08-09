@@ -1,0 +1,124 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Profile Card -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <img src="{% if profile_user.profile.avatar %}{{ profile_user.profile.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}"
+                         class="rounded-circle mb-3" width="150" height="150" alt="Profile Picture">
+                    <h3>{{ profile_user.username }}</h3>
+                    <p class="text-muted">{{ profile_user.profile.institution|default:"No institution" }}</p>
+                    
+                    <!-- Follow Button -->
+                    {% if request.user != profile_user %}
+                        <form action="{% url 'follow_user' profile_user.id %}" method="post" class="mb-3">
+                            {% csrf_token %}
+                            <button type="submit" class="btn {% if is_following %}btn-outline-secondary{% else %}btn-primary{% endif %}">
+                                {% if is_following %}
+                                    <i class="fas fa-user-minus"></i> Unfollow
+                                {% else %}
+                                    <i class="fas fa-user-plus"></i> Follow
+                                {% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
+                    
+                    <!-- Stats -->
+                    <div class="d-flex justify-content-around mb-3">
+                        <div>
+                            <a href="{% url 'followers_list' profile_user.id %}" class="text-decoration-none">
+                                <h5 class="mb-0">{{ followers_count }}</h5>
+                                <small class="text-muted">Followers</small>
+                            </a>
+                        </div>
+                        <div>
+                            <a href="{% url 'following_list' profile_user.id %}" class="text-decoration-none">
+                                <h5 class="mb-0">{{ following_count }}</h5>
+                                <small class="text-muted">Following</small>
+                            </a>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ uploads.count }}</h5>
+                            <small class="text-muted">Uploads</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Bio -->
+                    {% if profile_user.profile.bio %}
+                        <p class="text-left">{{ profile_user.profile.bio }}</p>
+                    {% endif %}
+                    
+                    <!-- Details -->
+                    <ul class="list-unstyled text-left">
+                        {% if profile_user.profile.course %}
+                            <li><i class="fas fa-graduation-cap mr-2"></i> {{ profile_user.profile.course }}</li>
+                        {% endif %}
+                        {% if profile_user.profile.location %}
+                            <li><i class="fas fa-map-marker-alt mr-2"></i> {{ profile_user.profile.location }}</li>
+                        {% endif %}
+                        {% if profile_user.profile.website %}
+                            <li><i class="fas fa-globe mr-2"></i> <a href="{{ profile_user.profile.website }}" target="_blank">Website</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Section -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#uploads" data-toggle="tab">Uploads</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#about" data-toggle="tab">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body tab-content">
+                    <!-- Uploads Tab -->
+                    <div class="tab-pane active" id="uploads">
+                        {% if uploads %}
+                            <div class="list-group">
+                                {% for content in uploads %}
+                                    <a href="{% url 'content_detail' content.pk %}" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">{{ content.name }}</h5>
+                                            <small>{{ content.get_content_type_display }}</small>
+                                        </div>
+                                        <p class="mb-1">{{ content.desc|truncatewords:20 }}</p>
+                                        <small>Uploaded {{ content.date|timesince }} ago</small>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No uploads yet.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- About Tab -->
+                    <div class="tab-pane" id="about">
+                        <h5>Academic Information</h5>
+                        <ul class="list-unstyled">
+                            <li><strong>Institution:</strong> {{ profile_user.profile.institution|default:"Not specified" }}</li>
+                            <li><strong>Course:</strong> {{ profile_user.profile.course|default:"Not specified" }}</li>
+                            <li><strong>Semester:</strong> {{ profile_user.profile.semester|default:"Not specified" }}</li>
+                        </ul>
+                        
+                        {% if profile_user.profile.bio %}
+                            <h5>Bio</h5>
+                            <p>{{ profile_user.profile.bio }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

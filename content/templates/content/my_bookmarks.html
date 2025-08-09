@@ -239,42 +239,60 @@
 </div>
 
 <style>
-    /* Base Styles */
+    /* Theme-aware styles */
     .bookmarks-page {
         padding: 2rem 0;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* Header Styles */
     .page-header {
-        border-bottom: 1px solid #e9ecef;
+        border-bottom: 1px solid var(--border-color);
         padding-bottom: 1.5rem;
     }
 
     .page-title {
         font-size: 2rem;
         font-weight: 700;
-        color: #212529;
+        color: var(--text-color);
     }
 
-    /* Stat Card */
+    .page-subtitle {
+        color: var(--neutral-400);
+    }
+
     .stat-card {
-        background: white;
+        background: var(--card-bg);
         min-width: 180px;
+        border: 1px solid var(--border-color);
     }
 
     .stat-icon {
         width: 45px;
         height: 45px;
+        background-color: var(--primary-100);
     }
 
-    /* Bookmark Card */
     .bookmark-card {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color) !important;
     }
 
     .bookmark-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1) !important;
+        box-shadow: var(--shadow-lg) !important;
+    }
+
+    .card-header, .card-footer {
+        background-color: var(--surface-color) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    .content-type .badge {
+        background-color: var(--neutral-100) !important;
+        color: var(--text-color) !important;
     }
 
     .avatar {
@@ -282,14 +300,12 @@
         height: 40px;
     }
 
-    /* File Type Icons */
     .file-icon.pdf { color: #e63946; }
     .file-icon.word { color: #2b579a; }
     .file-icon.archive { color: #f8961e; }
-    .file-icon.generic { color: #4361ee; }
-    .file-icon.missing { color: #6c757d; }
+    .file-icon.generic { color: var(--primary-500); }
+    .file-icon.missing { color: var(--neutral-500); }
 
-    /* Quick Actions */
     .quick-actions .btn-bookmark {
         width: 32px;
         height: 32px;
@@ -298,23 +314,52 @@
         align-items: center;
         justify-content: center;
         padding: 0;
-        color: #4361ee;
-        background: rgba(67, 97, 238, 0.1);
+        color: var(--primary-500);
+        background: rgba(var(--primary-500-rgb), 0.1);
         border: none;
     }
 
     .quick-actions .btn-bookmark.active {
         color: white;
-        background: #4361ee;
+        background: var(--primary-500);
     }
 
-    /* Empty State */
     .empty-state {
         max-width: 800px;
         margin: 0 auto;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
     }
 
-    /* Responsive Adjustments */
+    .text-muted {
+        color: var(--neutral-400) !important;
+    }
+
+    .content-tags .badge {
+        background-color: var(--neutral-100);
+        color: var(--text-color);
+    }
+
+    .content-tags .bg-primary {
+        background-color: var(--primary-500) !important;
+    }
+
+    .pagination .page-link {
+        color: var(--primary-500);
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: var(--primary-500);
+        border-color: var(--primary-500);
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: var(--neutral-400);
+        background-color: var(--card-bg);
+    }
+
     @media (max-width: 768px) {
         .page-title {
             font-size: 1.75rem;
@@ -362,6 +407,15 @@
                 }
             });
         });
+
+        // Initialize theme variables if not already set
+        if (!document.documentElement.style.getPropertyValue('--primary-500-rgb')) {
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-500');
+            const rgb = primaryColor.match(/\d+/g);
+            if (rgb && rgb.length >= 3) {
+                document.documentElement.style.setProperty('--primary-500-rgb', `${rgb[0]}, ${rgb[1]}, ${rgb[2]}`);
+            }
+        }
     });
 </script>
 

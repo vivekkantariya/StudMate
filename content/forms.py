@@ -52,11 +52,11 @@ class ContentForm(forms.ModelForm):
     def clean_file(self):
         file = self.cleaned_data.get('file')
         if file:
-            # Check file type
+            # file type
             if not file.name.endswith(('.pdf', '.docx', '.zip')):
                 raise forms.ValidationError("Only .pdf, .docx, or .zip files are allowed.")
             
-            # Check file size 
+            # file size 
             if file.size > 10 * 1024 * 1024:  #mb
                 raise forms.ValidationError("File size should not exceed 5MB.")
         return file
@@ -79,4 +79,17 @@ class ProfileForm(forms.ModelForm):
             'semester': forms.NumberInput(attrs={'class': 'form-control'}),
             'website': forms.URLInput(attrs={'class': 'form-control'}),
             'location': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        
+# forms.py
+from django import forms
+from .models import ContentReport
+
+class ReportForm(forms.ModelForm):
+    class Meta:
+        model = ContentReport
+        fields = ['reason', 'description']
+        widgets = {
+            'reason': forms.Select(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }

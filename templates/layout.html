@@ -19,10 +19,270 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+    
+    <style>
+        /* Enhanced Search Styles */
+        .search-container {
+            position: relative;
+            flex-grow: 1;
+            max-width: 500px;
+            margin: 0 20px;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 45px 12px 45px;
+            border: 2px solid #e0e7ff;
+            border-radius: 25px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #a23535;
+            cursor: pointer;
+            display: none;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .search-clear:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        /* Search Dropdown */
+        .search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e0e7ff;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-dropdown.show {
+            display: block;
+        }
+
+        .dropdown-section {
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .dropdown-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            padding: 12px 20px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #f8fafc;
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #f8fafc;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8fafc;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .dropdown-item.active {
+            background-color: #eef2ff;
+            border-left: 3px solid #4f46e5;
+        }
+
+        .item-icon {
+            margin-right: 12px;
+            width: 16px;
+            color: #6b7280;
+            flex-shrink: 0;
+        }
+
+        .item-content {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .item-title {
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-subtitle {
+            font-size: 12px;
+            color: #6b7280;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-meta {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        .content-type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+
+        .badge-practical { background: #dbeafe; color: #1e40af; }
+        .badge-note { background: #d1fae5; color: #065f46; }
+        .badge-assignment { background: #fef3c7; color: #92400e; }
+        .badge-project { background: #e0e7ff; color: #5b21b6; }
+
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .search-loading {
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .search-container {
+                margin: 0 10px;
+                max-width: none;
+            }
+            
+            .search-bar input {
+                padding: 10px 40px 10px 35px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            
+            .search-dropdown {
+                max-height: 300px;
+            }
+        }
+
+        /* Highlight matching text */
+        .highlight {
+            background-color: #fef3c7;
+            font-weight: 600;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        /* Quick search suggestions */
+        .quick-suggestions {
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .quick-suggestions-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .suggestion-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .suggestion-tag {
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .suggestion-tag:hover {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+    </style>
 </head>
 
-<body class="{{ request.user.userprofile.dark_mode|yesno:'dark-theme,' }}">
-    
+<body>
+
     <!-- Navbar -->
     <header class="navbar">
         <button class="mobile-menu-btn" id="mobileMenuBtn">
@@ -33,19 +293,38 @@
             <img src="{% static 'images/logo.svg' %}" alt="Logo">
         </a>
 
-        <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search materials, courses...">
+        <!-- Enhanced Search Container -->
+        <div class="search-container">
+            <div class="search-bar">
+                <form method="get" action="{% url 'content_list' %}" id="searchForm">
+                    <input type="text" 
+                           name="search" 
+                           id="searchInput"
+                           placeholder="Search materials, courses, users..."
+                           value="{{ request.GET.search }}"
+                           autocomplete="off">
+                    <i class="fas fa-search search-icon"></i>
+                    <button type="button" class="search-clear" id="searchClear">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </form>
+                
+                <!-- Search Dropdown -->
+                <div class="search-dropdown" id="searchDropdown">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
         </div>
 
-        <div class="nav-actions">
+        <!-- Desktop Only Actions -->
+        <div class="nav-actions desktop-only">
             <button class="nav-btn" id="notificationBtn">
                 <i class="fas fa-bell"></i>
                 <span class="badge-notification">3</span>
             </button>
 
             {% if user.is_authenticated %}
-            <a href="{% url 'profileview' %}" class="user-info">
+                <a href="{% url 'profileview' request.user.id %}" class="user-info">
                 <i class="fas fa-user"></i>
                 <span>{{ user.username }}</span>
             </a>
@@ -59,10 +338,6 @@
                 <a href="{% url 'register' %}" class="btn-signup">Sign Up</a>
             </div>
             {% endif %}
-
-            <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
-                <i class="fas fa-moon"></i>
-            </button>
         </div>
     </header>
 
@@ -77,6 +352,7 @@
                 </button>
             </div>
 
+            <!-- Navigation Menu -->
             <ul class="sidebar-menu">
                 <li>
                     <a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">
@@ -99,6 +375,48 @@
                 </li>
                 {% endif %}
             </ul>
+
+            <!-- Mobile Actions Section -->
+            <div class="sidebar-actions mobile-only">
+                <div class="sidebar-divider"></div>
+                
+                {% if user.is_authenticated %}
+                <!-- User Profile -->
+                <a href="{% url 'profileview' request.user.id %}" class="sidebar-action-item">
+                    <i class="fas fa-user"></i>
+                    <span>{{ user.username }}</span>
+                </a>
+                
+                <!-- Notifications -->
+                <button class="sidebar-action-item" id="mobileNotificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                    <span class="badge-notification-mobile">3</span>
+                </button>
+                
+                <!-- Logout -->
+                <form method="post" action="{% url 'logout' %}" class="mobile-logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="sidebar-action-item logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+                
+                {% else %}
+                <!-- Login/Register for non-authenticated users -->
+                <a href="{% url 'login' %}" class="sidebar-action-item">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </a>
+                
+                <a href="{% url 'register' %}" class="sidebar-action-item primary">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Sign Up</span>
+                </a>
+                
+                {% endif %}
+            </div>
         </aside>
 
         <!-- Main Content -->
@@ -109,7 +427,448 @@
 
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+    <script>
+        // Enhanced Search Functionality with Django Integration
+        class SearchDropdown {
+            constructor() {
+                this.searchInput = document.getElementById('searchInput');
+                this.searchDropdown = document.getElementById('searchDropdown');
+                this.searchClear = document.getElementById('searchClear');
+                this.searchForm = document.getElementById('searchForm');
+                
+                this.currentSearch = '';
+                this.searchTimeout = null;
+                this.activeIndex = -1;
+                this.items = [];
+                
+                this.init();
+            }
+            
+            init() {
+                // Event listeners
+                this.searchInput.addEventListener('input', (e) => this.handleInput(e));
+                this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
+                this.searchInput.addEventListener('focus', () => this.handleFocus());
+                this.searchClear.addEventListener('click', () => this.clearSearch());
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.search-container')) {
+                        this.hideDropdown();
+                    }
+                });
+                
+                // Show/hide clear button
+                this.searchInput.addEventListener('input', () => {
+                    this.searchClear.style.display = this.searchInput.value ? 'block' : 'none';
+                });
+                
+                // Initial state
+                this.searchClear.style.display = this.searchInput.value ? 'block' : 'none';
+            }
+            
+            handleInput(e) {
+                const query = e.target.value.trim();
+                
+                if (query !== this.currentSearch) {
+                    this.currentSearch = query;
+                    
+                    // Clear previous timeout
+                    if (this.searchTimeout) {
+                        clearTimeout(this.searchTimeout);
+                    }
+                    
+                    if (query.length > 0) {
+                        // Show loading state
+                        this.showLoading();
+                        
+                        // Debounce search
+                        this.searchTimeout = setTimeout(() => {
+                            this.performSearch(query);
+                        }, 300);
+                    } else {
+                        this.showQuickSuggestions();
+                    }
+                }
+            }
+            
+            handleKeydown(e) {
+                if (!this.searchDropdown.classList.contains('show')) return;
+                
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.navigateDown();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.navigateUp();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        this.selectActive();
+                        break;
+                    case 'Escape':
+                        this.hideDropdown();
+                        this.searchInput.blur();
+                        break;
+                }
+            }
+            
+            handleFocus() {
+                if (this.currentSearch && this.items.length > 0) {
+                    this.showDropdown();
+                } else if (!this.currentSearch) {
+                    this.showQuickSuggestions();
+                }
+            }
+            
+            showLoading() {
+                this.searchDropdown.innerHTML = `
+                    <div class="search-loading">
+                        <i class="fas fa-spinner loading-spinner"></i>
+                        Searching...
+                    </div>
+                `;
+                this.showDropdown();
+            }
+            
+            showQuickSuggestions() {
+                // Show popular tags and content types for quick access
+                const suggestions = `
+                    <div class="quick-suggestions">
+                        <div class="quick-suggestions-title">Popular Tags</div>
+                        <div class="suggestion-tags">
+                            <span class="suggestion-tag" data-search="python">Python</span>
+                            <span class="suggestion-tag" data-search="javascript">JavaScript</span>
+                            <span class="suggestion-tag" data-search="database">Database</span>
+                            <span class="suggestion-tag" data-search="algorithms">Algorithms</span>
+                            <span class="suggestion-tag" data-search="web development">Web Dev</span>
+                            <span class="suggestion-tag" data-search="machine learning">ML</span>
+                        </div>
+                    </div>
+                    <div class="dropdown-section">
+                        <div class="section-header">Browse by Type</div>
+                        <a href="/content/?content_type=note" class="dropdown-item">
+                            <i class="fas fa-sticky-note item-icon"></i>
+                            <div class="item-content">
+                                <div class="item-title">Notes</div>
+                                <div class="item-subtitle">Study notes and summaries</div>
+                            </div>
+                        </a>
+                        <a href="/content/?content_type=prac" class="dropdown-item">
+                            <i class="fas fa-code item-icon"></i>
+                            <div class="item-content">
+                                <div class="item-title">Practicals</div>
+                                <div class="item-subtitle">Lab exercises and code</div>
+                            </div>
+                        </a>
+                        <a href="/content/?content_type=ass" class="dropdown-item">
+                            <i class="fas fa-tasks item-icon"></i>
+                            <div class="item-content">
+                                <div class="item-title">Assignments</div>
+                                <div class="item-subtitle">Homework and projects</div>
+                            </div>
+                        </a>
+                        <a href="/content/?content_type=project" class="dropdown-item">
+                            <i class="fas fa-project-diagram item-icon"></i>
+                            <div class="item-content">
+                                <div class="item-title">Projects</div>
+                                <div class="item-subtitle">Final projects and demos</div>
+                            </div>
+                        </a>
+                    </div>
+                `;
+                this.searchDropdown.innerHTML = suggestions;
+                
+                // Add click listeners to suggestion tags
+                this.searchDropdown.querySelectorAll('.suggestion-tag').forEach(tag => {
+                    tag.addEventListener('click', (e) => {
+                        const searchTerm = e.target.getAttribute('data-search');
+                        this.searchInput.value = searchTerm;
+                        this.searchForm.submit();
+                    });
+                });
+                
+                this.showDropdown();
+            }
+            
+            performSearch(query) {
+                // Get CSRF token for Django
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? 
+                    document.querySelector('[name=csrfmiddlewaretoken]').value : 
+                    this.getCookie('csrftoken');
+                
+                // Make AJAX call to Django search API
+                fetch(`/search/api/?q=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    this.displayResults(data, query);
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    this.showError();
+                });
+            }
+            
+            getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            
+            displayResults(results, query) {
+                let html = '';
+                this.items = [];
+                
+                // Content Section
+                if (results.contents && results.contents.length > 0) {
+                    html += `<div class="dropdown-section">
+                        <div class="section-header">Materials (${results.contents.length})</div>`;
+                    
+                    results.contents.forEach((item, index) => {
+                        const highlightedTitle = this.highlightText(item.name, query);
+                        const contentTypeIcon = this.getContentTypeIcon(item.content_type);
+                        const contentTypeBadge = this.getContentTypeBadge(item.content_type);
+                        const dateFormatted = new Date(item.date).toLocaleDateString();
+                        
+                        html += `
+                            <a href="/content/${item.id}/" class="dropdown-item" data-index="${this.items.length}">
+                                <i class="${contentTypeIcon} item-icon"></i>
+                                <div class="item-content">
+                                    <div class="item-title">${highlightedTitle}</div>
+                                    <div class="item-subtitle">by ${item.author__username} • ${dateFormatted}</div>
+                                </div>
+                                <div class="item-meta">
+                                    ${contentTypeBadge}
+                                    <span style="margin-left: 8px;">${item.download_count || 0} downloads</span>
+                                </div>
+                            </a>
+                        `;
+                        this.items.push({ type: 'content', data: item });
+                    });
+                    html += '</div>';
+                }
+                
+                // Users Section
+                if (results.users && results.users.length > 0) {
+                    html += `<div class="dropdown-section">
+                        <div class="section-header">Users (${results.users.length})</div>`;
+                    
+                    results.users.forEach(item => {
+                        const highlightedUsername = this.highlightText(item.username, query);
+                        const profileName = item.profile__bio ? 
+                            item.profile__bio.substring(0, 50) + (item.profile__bio.length > 50 ? '...' : '') : 
+                            'No bio available';
+                        
+                        html += `
+                            <a href="/profile/${item.username}/" class="dropdown-item" data-index="${this.items.length}">
+                                <i class="fas fa-user item-icon"></i>
+                                <div class="item-content">
+                                    <div class="item-title">${highlightedUsername}</div>
+                                    <div class="item-subtitle">${profileName}</div>
+                                </div>
+                                <div class="item-meta">${item.content_count || 0} uploads</div>
+                            </a>
+                        `;
+                        this.items.push({ type: 'user', data: item });
+                    });
+                    html += '</div>';
+                }
+                
+                // Tags Section
+                if (results.tags && results.tags.length > 0) {
+                    html += `<div class="dropdown-section">
+                        <div class="section-header">Related Tags</div>`;
+                    
+                    results.tags.forEach(tag => {
+                        const highlightedTag = this.highlightText(tag.name, query);
+                        html += `
+                            <a href="/content/?search=${encodeURIComponent(tag.name)}" class="dropdown-item" data-index="${this.items.length}">
+                                <i class="fas fa-tag item-icon"></i>
+                                <div class="item-content">
+                                    <div class="item-title">${highlightedTag}</div>
+                                    <div class="item-subtitle">${tag.count} materials</div>
+                                </div>
+                            </a>
+                        `;
+                        this.items.push({ type: 'tag', data: tag });
+                    });
+                    html += '</div>';
+                }
+                
+                // No results
+                if (html === '') {
+                    html = `
+                        <div class="no-results">
+                            <i class="fas fa-search" style="font-size: 24px; margin-bottom: 8px; opacity: 0.5;"></i>
+                            <div>No results found for "${query}"</div>
+                            <div style="font-size: 12px; margin-top: 4px; opacity: 0.7;">
+                                Try different keywords or check spelling
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                this.searchDropdown.innerHTML = html;
+                this.showDropdown();
+                this.activeIndex = -1;
+            }
+            
+            getContentTypeIcon(contentType) {
+                const icons = {
+                    'note': 'fas fa-sticky-note',
+                    'prac': 'fas fa-code',
+                    'ass': 'fas fa-tasks',
+                    'project': 'fas fa-project-diagram'
+                };
+                return icons[contentType] || 'fas fa-file';
+            }
+            
+            getContentTypeBadge(contentType) {
+                const badges = {
+                    'note': '<span class="content-type-badge badge-note">Note</span>',
+                    'prac': '<span class="content-type-badge badge-practical">Practical</span>',
+                    'ass': '<span class="content-type-badge badge-assignment">Assignment</span>',
+                    'project': '<span class="content-type-badge badge-project">Project</span>'
+                };
+                return badges[contentType] || '<span class="content-type-badge">Content</span>';
+            }
+            
+            highlightText(text, query) {
+                if (!query || !text) return text;
+                const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                return text.replace(regex, '<span class="highlight">$1</span>');
+            }
+            
+            navigateDown() {
+                this.activeIndex = Math.min(this.activeIndex + 1, this.items.length - 1);
+                this.updateActiveItem();
+            }
+            
+            navigateUp() {
+                this.activeIndex = Math.max(this.activeIndex - 1, -1);
+                this.updateActiveItem();
+            }
+            
+            updateActiveItem() {
+                const items = this.searchDropdown.querySelectorAll('.dropdown-item[data-index]');
+                items.forEach((item, index) => {
+                    item.classList.toggle('active', index === this.activeIndex);
+                });
+                
+                // Scroll into view
+                if (this.activeIndex >= 0 && items[this.activeIndex]) {
+                    items[this.activeIndex].scrollIntoView({
+                        block: 'nearest',
+                        behavior: 'smooth'
+                    });
+                }
+            }
+            
+            selectActive() {
+                if (this.activeIndex >= 0) {
+                    const activeItem = this.searchDropdown.querySelector('.dropdown-item.active');
+                    if (activeItem) {
+                        window.location.href = activeItem.href;
+                    }
+                } else {
+                    this.searchForm.submit();
+                }
+            }
+            
+            clearSearch() {
+                this.searchInput.value = '';
+                this.currentSearch = '';
+                this.hideDropdown();
+                this.searchClear.style.display = 'none';
+                this.searchInput.focus();
+                this.showQuickSuggestions();
+            }
+            
+            showDropdown() {
+                this.searchDropdown.classList.add('show');
+            }
+            
+            hideDropdown() {
+                this.searchDropdown.classList.remove('show');
+                this.activeIndex = -1;
+            }
+            
+            showError() {
+                this.searchDropdown.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 24px; margin-bottom: 8px;"></i>
+                        <div>Something went wrong</div>
+                        <div style="font-size: 12px; margin-top: 4px; opacity: 0.7;">
+                            Please try again later
+                        </div>
+                    </div>
+                `;
+                this.showDropdown();
+            }
+        }
+        
+        // Initialize search dropdown when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            new SearchDropdown();
+        });
+
+        // Handle AJAX follow/unfollow (existing code)
+        $(document).ready(function() {
+            $('form[action*="follow_user"]').on('submit', function(e) {
+                e.preventDefault();
+                var form = $(this);
+                var url = form.attr('action');
+                
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.success) {
+                            // Update button text and class
+                            var button = form.find('button');
+                            if (data.action === 'followed') {
+                                button.removeClass('btn-primary').addClass('btn-outline-secondary');
+                                button.html('<i class="fas fa-user-minus"></i> Unfollow');
+                            } else {
+                                button.removeClass('btn-outline-secondary').addClass('btn-primary');
+                                button.html('<i class="fas fa-user-plus"></i> Follow');
+                            }
+                            
+                            // Update followers count if available
+                            if (data.followers_count !== undefined) {
+                                $('.followers-count').text(data.followers_count);
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error);
+                    }
+                });
+            });
+        });
+    </script>
+    
     <!-- Custom JS -->
     <script src="{% static 'js/main.js' %}"></script>
 </body>
