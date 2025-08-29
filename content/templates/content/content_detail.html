@@ -4,46 +4,50 @@
 
 <link rel="stylesheet" href="{% static 'css/contentdetail.css' %}">
 
-<div class="content-detail-page">
-    <!-- Main Content Area -->
-    <div class="content-main">
+<div class="content-detail-container">
+    <!-- Main Content Column -->
+    <div class="content-main-column">
         <!-- Content Header Section -->
-        <div class="content-header-section">
-            <div class="content-breadcrumbs">
-                <a href="{% url 'home' %}">Home</a>
-                <i class="fas fa-chevron-right mx-2"></i>
-                <span>{{ item.get_content_type_display }}</span>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                <div>
-                    <h1 class="content-title">{{ item.name }}</h1>
-                    <div class="content-meta">
-                        <span class="content-type-badge">{{ item.get_content_type_display }}</span>
-                        <span class="content-rating">
-                            <i class="fas fa-star"></i> {{ item.rate|default:"0.0" }}/5.0
-                        </span>
-                        {% if item.download_count %}
-                        <span class="content-downloads">
-                            <i class="fas fa-download"></i> {{ item.download_count }}
-                        </span>
-                        {% endif %}
-                    </div>
+        <div class="content-header-card">
+            <nav aria-label="breadcrumb" class="content-breadcrumbs">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">{{ item.get_content_type_display }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ item.name|truncatechars:30 }}</li>
+                </ol>
+            </nav>
+
+            <div class="content-title-section">
+                <h1 class="content-title">{{ item.name }}</h1>
+                <div class="content-meta-badges">
+                    <span class="badge content-type-badge">{{ item.get_content_type_display }}</span>
+                    <span class="badge content-rating-badge">
+                        <i class="fas fa-star"></i> {{ item.rate|default:"0.0" }}/5.0
+                    </span>
+                    <span class="badge content-download-badge">
+                        <i class="fas fa-download"></i> {{ item.download_count }} downloads
+                    </span>
                 </div>
-                
-                <div class="content-actions">
-                    {% if item.file %}
-                    <a href="{{ item.file.url }}?download=1" class="btn btn-primary btn-download" download>
-                        <i class="fas fa-download"></i> Download
-                    </a>
-                    {% endif %}
-                    <button class="btn btn-outline-secondary btn-share" onclick="shareContent()">
+            </div>
+            {% if item.desc %}
+                <h5><i class="fas fa-align-left me-2"></i>Description</h5>
+                <p class="content-description">{{ item.desc|linebreaks }}</p>
+        {% endif %}
+
+            <div class="content-action-buttons">
+                {% if item.file %}
+                <a href="{{ item.file.url }}?download=1" class="btn btn-primary btn-lg btn-download" download>
+                    <i class="fas fa-download me-2"></i> Download
+                </a>
+                {% endif %}
+                <div class="btn-group" role="group">
+                    <button class="btn btn-outline-secondary btn-share" onclick="shareContent()" title="Share">
                         <i class="fas fa-share-alt"></i>
                     </button>
                     {% if request.user.is_authenticated %}
                     <form action="{% url 'toggle_bookmark' item.id %}" method="post" class="d-inline">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-{% if item.is_bookmarked %}warning{% else %}secondary{% endif %} btn-bookmark">
+                        <button type="submit" class="btn btn-outline-{% if is_bookmarked %}warning{% else %}secondary{% endif %} btn-bookmark" title="Bookmark">
                             <i class="fas fa-bookmark"></i>
                         </button>
                     </form>
@@ -54,15 +58,15 @@
 
         <!-- Content Preview Section -->
         {% if item.file and item.file.name|slice:"-4:" == '.pdf' %}
-        <div class="content-preview-section">
+        <div class="content-preview-card">
             <div class="preview-header">
                 <h3><i class="fas fa-file-pdf text-danger me-2"></i> Document Preview</h3>
                 <div class="preview-controls">
-                    <button class="btn btn-sm btn-outline-secondary" id="prevPage">
+                    <button class="btn btn-sm btn-outline-secondary" id="prevPage" disabled>
                         <i class="fas fa-chevron-left"></i> Previous
                     </button>
                     <span class="page-info">Page <span id="pageNum">1</span> of <span id="pageCount">0</span></span>
-                    <button class="btn btn-sm btn-outline-secondary" id="nextPage">
+                    <button class="btn btn-sm btn-outline-secondary" id="nextPage" disabled>
                         Next <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
@@ -75,137 +79,35 @@
             </div>
         </div>
         {% elif item.file %}
-        <div class="content-preview-section">
+        <div class="content-preview-card">
             <div class="preview-header">
                 <h3>
                     {% if item.file.name|slice:"-5:" == '.docx' %}
                     <i class="fas fa-file-word text-primary me-2"></i>
+                    {% elif item.file.name|slice:"-5:" == '.pptx' %}
+                    <i class="fas fa-file-powerpoint text-danger me-2"></i>
+                    {% elif item.file.name|slice:"-4:" == '.xls' or item.file.name|slice:"-5:" == '.xlsx' %}
+                    <i class="fas fa-file-excel text-success me-2"></i>
                     {% else %}
                     <i class="fas fa-file-alt text-secondary me-2"></i>
                     {% endif %}
                     File Preview Not Available
                 </h3>
             </div>
-            <div class="preview-placeholder">
-                <i class="fas fa-file-download display-4 text-muted mb-3"></i>
-                <p>Download the file to view its contents</p>
+            <div class="preview-placeholder text-center py-5">
+                <i class="fas fa-file-download fa-4x text-muted mb-3"></i>
+                <p class="mb-0">Download the file to view its contents</p>
             </div>
         </div>
         {% endif %}
 
-        <!-- Content Details Section -->
-        <div class="content-details-section">
-            <div class="detail-card">
-                <div class="detail-card-header">
-                    <h3><i class="fas fa-info-circle me-2"></i>Details</h3>
-                </div>
-                <div class="detail-card-body">
-                    <div class="detail-row">
-                        <div class="detail-label">Description</div>
-                        <div class="detail-value">{{ item.desc|default:"No description provided." }}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Uploaded</div>
-                        <div class="detail-value">{{ item.date|date:"F d, Y" }}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Last Updated</div>
-                        <div class="detail-value">{{ item.updated_at|timesince }} ago</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">File Type</div>
-                        <div class="detail-value">
-                            {% if item.file %}
-                                {{ item.file.name|slice:"-4:"|upper }} File
-                            {% else %}
-                                No file attached
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Tags</div>
-                        <div class="detail-value">
-                            {% for tag in item.tag_list %}
-                            <span class="tag-badge">{{ tag }}</span>
-                            {% empty %}
-                            <span class="text-muted">No tags</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="rating">
-    <strong>Average:</strong> <span>{{ item.rate|floatformat:1 }}</span> / 5
-</div>
-
-{% if user.is_authenticated %}
-<form method="POST" action="{% url 'rate_content' item.id %}">
-    {% csrf_token %}
-    <label for="rating">Your rating:</label>
-    <select name="score" id="rating">
-        {% for i in "12345" %}
-        <option value="{{ i }}">{{ i }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit">Submit</button>
-</form>
-{% else %}
-<p><a href="{% url 'login' %}">Login</a> to rate this content.</p>
-{% endif %}
-
-        </div>
-
-        <!-- Author Section -->
-        <div class="author-section">
-            <div class="author-card">
-                <div class="author-header">
-                    <img src="{% static 'images/default-avatar.png' %}" 
-                         alt="{{ item.author.username }}"
-                         class="author-avatar"
-                         onerror="this.src='https://ui-avatars.com/api/?name={{ item.author.username }}&background=4f46e5&color=ffffff&size=150'">
-                    <div class="author-info">
-                        <h4>{{ item.author.username }}</h4>
-                        <p class="text-muted mb-1">
-                            <i class="fas fa-calendar-alt me-1"></i>
-                            Member since {{ item.author.date_joined|date:"F Y" }}
-                        </p>
-                        <div class="author-rating">
-                            <i class="fas fa-star text-warning"></i>
-                            <span>4.8</span>
-                            <span class="text-muted mx-2">|</span>
-                            <i class="fas fa-file-alt text-primary"></i>
-                            <span>{{ item.author.contents.count }} resources</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="author-stats">
-                    <div class="stat-item">
-                        <div class="stat-value">{{ item.author.contents.count }}</div>
-                        <div class="stat-label">Resources</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">1.2K</div>
-                        <div class="stat-label">Downloads</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">4.8</div>
-                        <div class="stat-label">Avg Rating</div>
-                    </div>
-                </div>
-                <div class="author-actions">
-                    <a href="#" class="btn btn-outline-primary">View Profile</a>
-                    <a href="#" class="btn btn-primary">Follow</a>
-                </div>
-            </div>
-        </div>
-
         <!-- Related Resources Section -->
-        <div class="related-resources-section">
+        <div class="related-resources-card">
             <h3 class="section-title">
                 <i class="fas fa-layer-group me-2"></i>
                 Related Resources
             </h3>
-            
+
             {% if related_resources %}
             <div class="related-resources-grid">
                 {% for resource in related_resources %}
@@ -215,6 +117,10 @@
                         <i class="fas fa-file-pdf text-danger"></i>
                         {% elif resource.file.name|slice:"-5:" == '.docx' %}
                         <i class="fas fa-file-word text-primary"></i>
+                        {% elif resource.file.name|slice:"-5:" == '.pptx' %}
+                        <i class="fas fa-file-powerpoint text-danger"></i>
+                        {% elif resource.file.name|slice:"-4:" == '.xls' or resource.file.name|slice:"-5:" == '.xlsx' %}
+                        <i class="fas fa-file-excel text-success"></i>
                         {% else %}
                         <i class="fas fa-file-alt text-secondary"></i>
                         {% endif %}
@@ -235,7 +141,7 @@
                 {% endfor %}
             </div>
             {% else %}
-            <div class="empty-state">
+            <div class="empty-state text-center py-4">
                 <i class="fas fa-search fa-3x text-muted mb-3"></i>
                 <h5>No related resources found</h5>
                 <p class="text-muted">Try searching for similar content</p>
@@ -244,79 +150,238 @@
         </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="content-sidebar">
-        <!-- Quick Stats Card -->
-        <div class="sidebar-card">
-            <div class="sidebar-card-header">
-                <h4><i class="fas fa-chart-bar me-2"></i>Quick Stats</h4>
+    <!-- Sidebar Column -->
+    <div class="content-sidebar-column">
+        <!-- Author Card -->
+        <div class="sidebar-card author-card">
+            <div class="card-header">
+                <h3><i class="fas fa-user me-2"></i>Author</h3>
             </div>
-            <div class="sidebar-card-body">
-                <div class="stat-item">
-                    <i class="fas fa-eye text-primary"></i>
-                    <div>
-                        <div class="stat-value">1,245</div>
-                        <div class="stat-label">Views</div>
+            <div class="card-body">
+                <div class="author-header">
+                    {% if item.author.profile.avatar %}
+                    <img src="{{ item.author.profile.avatar.url }}" alt="{{ item.author.username }}" class="author-avatar">
+                    {% else %}
+                    <img src="{% static 'images/default-avatar.png' %}" alt="{{ item.author.username }}"
+                        class="author-avatar"
+                        onerror="this.src='https://ui-avatars.com/api/?name={{ item.author.username }}&background=4f46e5&color=ffffff&size=150'">
+                    {% endif %}
+                    <div class="author-info">
+                        <h4>{{ item.author.username }}</h4>
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            Member since {{ item.author.date_joined|date:"F Y" }}
+                        </p>
+                        {% if item.author.profile.institution %}
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-university me-1"></i>
+                            {{ item.author.profile.institution }}
+                        </p>
+                        {% endif %}
+                        {% if item.author.profile.course %}
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-graduation-cap me-1"></i>
+                            {{ item.author.profile.course }}{% if item.author.profile.semester %} - Semester {{ item.author.profile.semester }}{% endif %}
+                        </p>
+                        {% endif %}
+                        <div class="author-rating">
+                            <i class="fas fa-star text-warning"></i>
+                            <span>{{ author_avg_rating|floatformat:1|default:"0.0" }}</span>
+                            <span class="text-muted mx-2">|</span>
+                            <i class="fas fa-file-alt text-primary"></i>
+                            <span>{{ item.author.contents.count }} resources</span>
+                        </div>
                     </div>
                 </div>
-                <div class="stat-item">
-                    <i class="fas fa-download text-success"></i>
-                    <div>
-                        <div class="stat-value">{{ item.download_count|default:"0" }}</div>
+                <div class="author-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ item.author.contents.count }}</div>
+                        <div class="stat-label">Resources</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ author_total_downloads|default:"0" }}</div>
                         <div class="stat-label">Downloads</div>
                     </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ following_count|default:"0" }}</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <i class="fas fa-bookmark text-warning"></i>
-                    <div>
-                        <div class="stat-value">87</div>
-                        <div class="stat-label">Bookmarks</div>
+                <div class="author-actions">
+                    <a href="{% url 'profileview' user.id %}" class="btn btn-outline-primary w-100 mb-2">View Profile</a>
+                    {% if user.is_authenticated and user != item.author %}
+                    <form action="{% url 'toggle_follow' item.author.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-{% if is_following %}outline-{% endif %}primary w-100">
+                            {% if is_following %}
+                                <i class="fas fa-user-minus me-1"></i> Unfollow
+                            {% else %}
+                                <i class="fas fa-user-plus me-1"></i> Follow
+                            {% endif %}
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Details Card -->
+        <div class="sidebar-card details-card">
+            <div class="card-header">
+                <h3><i class="fas fa-info-circle me-2"></i>Details</h3>
+            </div>
+            <div class="card-body">
+                <div class="detail-item">
+                    <div class="detail-label">Uploaded</div>
+                    <div class="detail-value">{{ item.date|date:"F d, Y" }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Last Updated</div>
+                    <div class="detail-value">{{ item.updated_at|timesince }} ago</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">File Type</div>
+                    <div class="detail-value">
+                        {% if item.file %}
+                        {{ item.file.name|slice:"-4:"|upper }} File
+                        {% else %}
+                        No file attached
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">File Size</div>
+                    <div class="detail-value">
+                        {% if item.file %}
+                        {{ item.file.size|filesizeformat }}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Visibility</div>
+                    <div class="detail-value">
+                        <span class="badge {% if item.is_public %}bg-success{% else %}bg-warning{% endif %}">
+                            {% if item.is_public %}Public{% else %}Private{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Tags</div>
+                    <div class="detail-value">
+                        {% for tag in item.tag_list %}
+                        <span class="tag-badge">{{ tag }}</span>
+                        {% empty %}
+                        <span class="text-muted">No tags</span>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- File Info Card -->
-        {% if item.file %}
-        <div class="sidebar-card">
-            <div class="sidebar-card-header">
-                <h4><i class="fas fa-file-alt me-2"></i>File Information</h4>
+        <!-- Rating Section -->
+        <div class="content-rating-card card p-3 shadow-sm rounded">
+            <h3 class="section-title mb-3">
+                <i class="fas fa-star me-2 text-warning"></i> Ratings & Reviews
+            </h3>
+
+            <!-- Average Rating -->
+            <div class="rating-overview text-center mb-3">
+                <div class="rating-value display-6 fw-bold">
+                    {{ item.rate|default:"0"|floatformat:1 }}
+                </div>
+                <div class="rating-stars mb-1 text-warning">
+                    {% for i in "12345" %}
+                        <i class="fas fa-star{% if i|add:0 <= item.rate|default:0 %}{% else %}-o{% endif %}"></i>
+                    {% endfor %}
+                </div>
+                <div class="rating-count small text-muted">
+                    Based on {{ item.ratings.count }} rating{{ item.ratings.count|pluralize }}
+                </div>
             </div>
-            <div class="sidebar-card-body">
+
+            <!-- User Rating -->
+            {% if user.is_authenticated %}
+            <div class="user-rating-form text-center">
+                <form id="ratingForm" method="POST" action="{% url 'rate_content' item.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="score" id="ratingValue">
+                    <div class="clickable-stars d-flex justify-content-center">
+                        {% for i in "12345" %}
+                        <i class="fas fa-star star-option{% if user_rating and i|add:0 <= user_rating.score %} text-warning{% endif %}" data-value="{{ i }}"></i>
+                        {% endfor %}
+                    </div>
+                </form>
+                <small class="text-muted d-block mt-2" id="ratingFeedback">
+                    {% if user_rating %}
+                        You rated this {{ user_rating.score }} star{{ user_rating.score|pluralize }}
+                    {% else %}
+                        Click to rate this content
+                    {% endif %}
+                </small>
+            </div>
+            {% else %}
+            <div class="login-to-rate text-center">
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-primary btn-sm">
+                    Login to rate this content
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- File Download Card -->
+        {% if item.file %}
+        <div class="sidebar-card file-card">
+            <div class="card-header">
+                <h3><i class="fas fa-file-download me-2"></i>Download</h3>
+            </div>
+            <div class="card-body">
                 <div class="file-info">
                     <div class="file-icon">
                         {% if item.file.name|slice:"-4:" == '.pdf' %}
                         <i class="fas fa-file-pdf text-danger"></i>
                         {% elif item.file.name|slice:"-5:" == '.docx' %}
                         <i class="fas fa-file-word text-primary"></i>
+                        {% elif item.file.name|slice:"-5:" == '.pptx' %}
+                        <i class="fas fa-file-powerpoint text-danger"></i>
+                        {% elif item.file.name|slice:"-4:" == '.xls' or item.file.name|slice:"-5:" == '.xlsx' %}
+                        <i class="fas fa-file-excel text-success"></i>
                         {% else %}
                         <i class="fas fa-file-alt text-secondary"></i>
                         {% endif %}
                     </div>
                     <div class="file-details">
                         <div class="file-name">{{ item.file.name|slice:"50:" }}</div>
-                        <div class="file-size">{{ item.file.size }}</div>
+                        <div class="file-size">{{ item.file.size|filesizeformat }}</div>
                     </div>
                 </div>
-                <div class="file-actions">
-                    <a href="{{ item.file.url }}?download=1" class="btn btn-sm btn-primary w-100" download>
-                        <i class="fas fa-download me-2"></i> Download
-                    </a>
-                </div>
+                <a href="{{ item.file.url }}?download=1" class="btn btn-primary w-100 mt-3" download onclick="incrementDownload()">
+                    <i class="fas fa-download me-2"></i> Download Now
+                </a>
             </div>
         </div>
         {% endif %}
 
-        <!-- Report Card -->
-        {% if user.is_authenticated %}
-    <a href="{% url 'report_content' item.pk %}" class="btn btn-danger btn-sm">
-        Report Content
-    </a>
-{% else %}
-    <p><a href="{% url 'login' %}">Login</a> to report content.</p>
-{% endif %}
-
-
+        <!-- Report Content Section -->
+        <div class="sidebar-card report-card">
+            <div class="card-header">
+                <h3><i class="fas fa-flag me-2"></i>Report Content</h3>
+            </div>
+            <div class="card-body">
+                {% if user.is_authenticated %}
+                <p>Found an issue with this content?</p>
+                <a href="{% url 'report_content' item.pk %}" class="btn btn-danger w-100">
+                    <i class="fas fa-flag me-2"></i> Report Content
+                </a>
+                {% else %}
+                <p>Login to report inappropriate content</p>
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-sign-in-alt me-2"></i> Login
+                </a>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
@@ -325,7 +390,7 @@
 <script>
     // Set PDF.js worker path
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
-    
+
     // PDF Preview functionality
     {% if item.file and item.file.name|slice:"-4:" == '.pdf' %}
     let pdfDoc = null,
@@ -336,22 +401,21 @@
         canvas = document.getElementById('pdfPreview'),
         ctx = canvas.getContext('2d');
 
-    // Initialize PDF rendering
     function renderPage(num) {
         pageRendering = true;
-        pdfDoc.getPage(num).then(function(page) {
+        pdfDoc.getPage(num).then(function (page) {
             const viewport = page.getViewport({ scale: scale });
             canvas.height = viewport.height;
             canvas.width = viewport.width;
-            
+
             const renderContext = {
                 canvasContext: ctx,
                 viewport: viewport
             };
-            
+
             const renderTask = page.render(renderContext);
-            
-            renderTask.promise.then(function() {
+
+            renderTask.promise.then(function () {
                 pageRendering = false;
                 if (pageNumPending !== null) {
                     renderPage(pageNumPending);
@@ -359,8 +423,12 @@
                 }
             });
         });
-        
+
         document.getElementById('pageNum').textContent = num;
+        
+        // Enable/disable navigation buttons
+        document.getElementById('prevPage').disabled = (num <= 1);
+        document.getElementById('nextPage').disabled = (num >= pdfDoc.numPages || num >= 3);
     }
 
     function queueRenderPage(num) {
@@ -372,28 +440,36 @@
     }
 
     function onPrevPage() {
-        if (pageNum <= 1) {
-            return;
-        }
+        if (pageNum <= 1) return;
         pageNum--;
         queueRenderPage(pageNum);
     }
 
     function onNextPage() {
-        if (pageNum >= pdfDoc.numPages || pageNum >= 3) { // Limit to 3 pages for preview
-            return;
-        }
+        if (pageNum >= pdfDoc.numPages || pageNum >= 3) return;
         pageNum++;
         queueRenderPage(pageNum);
     }
 
     // Load the PDF
-    pdfjsLib.getDocument("{{ item.file.url }}").promise.then(function(pdfDoc_) {
+    pdfjsLib.getDocument("{{ item.file.url }}").promise.then(function (pdfDoc_) {
         pdfDoc = pdfDoc_;
         document.getElementById('pageCount').textContent = Math.min(pdfDoc.numPages, 3);
         
+        // Enable navigation buttons
+        document.getElementById('prevPage').disabled = false;
+        document.getElementById('nextPage').disabled = (pdfDoc.numPages <= 1);
+        
         // Render the first page
         renderPage(pageNum);
+    }).catch(function(error) {
+        console.error('PDF loading error:', error);
+        document.querySelector('.preview-container').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Failed to load PDF preview. Please download the file to view it.
+            </div>
+        `;
     });
 
     document.getElementById('prevPage').addEventListener('click', onPrevPage);
@@ -417,11 +493,11 @@
                 toast.className = 'share-toast';
                 toast.innerHTML = '<i class="fas fa-check-circle me-2"></i> Link copied to clipboard!';
                 document.body.appendChild(toast);
-                
+
                 setTimeout(() => {
                     toast.classList.add('show');
                 }, 10);
-                
+
                 setTimeout(() => {
                     toast.classList.remove('show');
                     setTimeout(() => {
@@ -432,6 +508,426 @@
         }
     }
 
+    // Download counter
+    function incrementDownload() {
+        fetch("{% url 'increment_download' item.id %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        }).catch(error => console.error('Error:', error));
+    }
+
+    // Rating functionality
+    document.querySelectorAll(".star-option").forEach(star => {
+        star.addEventListener("click", function() {
+            let value = this.getAttribute("data-value");
+            document.getElementById("ratingValue").value = value;
+
+            // highlight stars
+            document.querySelectorAll(".star-option").forEach(s => {
+                s.classList.remove("text-warning");
+                if (s.getAttribute("data-value") <= value) {
+                    s.classList.add("text-warning");
+                }
+            });
+
+            // feedback
+            document.getElementById("ratingFeedback").innerText = `You rated ${value} star${value > 1 ? 's' : ''}`;
+
+            // auto-submit
+            document.getElementById("ratingForm").submit();
+        });
+
+        // Hover effect
+        star.addEventListener("mouseenter", function() {
+            let value = this.getAttribute("data-value");
+            document.querySelectorAll(".star-option").forEach(s => {
+                s.style.color = s.getAttribute("data-value") <= value ? "#ffc107" : "#ccc";
+            });
+        });
+    });
+
+    // Reset stars on mouse leave
+    document.querySelector(".clickable-stars").addEventListener("mouseleave", function() {
+        document.querySelectorAll(".star-option").forEach(s => {
+            s.style.color = s.classList.contains("text-warning") ? "#ffc107" : "#ccc";
+        });
+    });
 </script>
+
+<!-- Enhanced CSS -->
+<style>
+    .content-detail-container {
+        display: flex;
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1.5rem;
+    }
+    
+    .content-main-column {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .content-sidebar-column {
+        width: 320px;
+        flex-shrink: 0;
+    }
+    
+    .content-header-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .content-title {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+        color: #2d3748;
+    }
+    
+    .content-meta-badges {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .content-type-badge {
+        background: #4f46e5;
+        color: white;
+    }
+    
+    .content-rating-badge {
+        background: #f59e0b;
+        color: white;
+    }
+    
+    .content-download-badge {
+        background: #10b981;
+        color: white;
+    }
+    
+    .content-action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-top: 1rem;
+    }
+
+    .author-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .author-header {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .author-stats {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 1rem;
+        padding: 1rem 0;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-weight: bold;
+        font-size: 1.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .detail-value {
+        text-align: right;
+    }
+
+    .tag-badge {
+        display: inline-block;
+        background: #e5e7eb;
+        color: #374151;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .sidebar-card, .content-preview-card, 
+    .content-description-card, .content-rating-card,
+    .related-resources-card {
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .card-header h3 {
+        font-size: 1.25rem;
+        margin: 0;
+        color: #2d3748;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .star-option {
+        font-size: 1.8rem;
+        color: #ccc;
+        cursor: pointer;
+        margin: 0 3px;
+        transition: color 0.2s ease;
+    }
+
+    .star-option.text-warning {
+        color: #ffc107 !important;
+    }
+
+    .related-resources-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+
+    .resource-card {
+        display: flex;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s ease;
+    }
+
+    .resource-card:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .resource-icon {
+        margin-right: 1rem;
+        font-size: 2rem;
+    }
+
+    .resource-info {
+        flex: 1;
+    }
+
+    .resource-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .resource-meta {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .resource-type {
+        color: #6b7280;
+    }
+
+    .resource-rating {
+        color: #f59e0b;
+    }
+
+    .resource-author {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .share-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        z-index: 1000;
+    }
+
+    .share-toast.show {
+        transform: translateX(0);
+    }
+
+    .preview-container {
+        text-align: center;
+        background: #f8fafc;
+        border: 2px dashed #cbd5e0;
+        border-radius: 8px;
+        padding: 2rem;
+    }
+
+    .preview-canvas {
+        max-width: 100%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+    }
+
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .preview-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .page-info {
+        font-size: 0.875rem;
+        color: #6b7280;
+        white-space: nowrap;
+    }
+
+    .preview-footer {
+        padding: 0.75rem 1.5rem;
+        background: #f8fafc;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        text-align: center;
+    }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .file-icon {
+        font-size: 2.5rem;
+    }
+
+    .file-details {
+        flex: 1;
+    }
+
+    .file-name {
+        font-weight: 600;
+        word-break: break-all;
+    }
+
+    .file-size {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .empty-state {
+        padding: 3rem 1rem;
+    }
+
+    .empty-state h5 {
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        .content-detail-container {
+            flex-direction: column;
+        }
+        
+        .content-sidebar-column {
+            width: 100%;
+        }
+
+        .related-resources-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .author-header {
+            text-align: center;
+            flex-direction: column;
+        }
+
+        .author-stats {
+            justify-content: space-between;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .content-detail-container {
+            padding: 1rem;
+        }
+
+        .content-meta-badges {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .content-action-buttons {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .preview-controls {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .resource-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .resource-icon {
+            margin-right: 0;
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
 
 {% endblock %}

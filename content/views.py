@@ -1,5 +1,6 @@
 from collections import Counter
 import re
+from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth import login, logout as django_logout
@@ -7,13 +8,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db import models
-from django.db.models import Q, Sum, Count
+from django.db.models import Q, Sum, Count, Avg
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 
-from .forms import CustomUserForm, ContentForm, ProfileForm, ReportForm
-from .models import Content, Bookmark, Rating, ContentReport
+from .forms import CustomUserForm, ContentForm, ProfileForm, ReportForm, ContentEditForm
+from .models import Content, Bookmark, Rating, ContentReport, Download, Follow
 
 from django.db.models import Avg
 from django.db.models.signals import post_save, post_delete
@@ -217,22 +219,144 @@ def my_upload(request):
     return render(request, 'content/myupload.html', {'data': data})
 
 
-# Profile views
+# Profile views with dynamic analytics
 @login_required
 def profile_view(request, user_id):
     user_obj = get_object_or_404(User, id=user_id)
     profile = user_obj.profile
-    uploads = Content.objects.filter(author=user_obj)
+    uploads = Content.objects.filter(author=user_obj, is_public=True)
     bookmarks = Bookmark.objects.filter(user=user_obj).select_related('content')
-    bookmarked_contents = [b.content for b in bookmarks]
+    bookmarked_contents = [b.content for b in bookmarks if b.content.is_public]
     for c in bookmarked_contents:
         c.is_bookmarked = True
 
-    return render(request, 'profile/view.html', {
+    # Check if current user is following this user
+    is_following = False
+    if request.user.is_authenticated and request.user != user_obj:
+        is_following = Follow.objects.filter(
+            follower=request.user, 
+            following=user_obj
+        ).exists()
+
+    # Calculate dynamic analytics
+    analytics = calculate_user_analytics(user_obj)
+
+    context = {
         'profile': profile,
         'uploads': uploads,
         'bookmarks': bookmarked_contents,
-    })
+        'is_following': is_following,
+        'is_own_profile': request.user == user_obj,
+        'followers_count': user_obj.followers.count(),
+        'following_count': user_obj.following.count(),
+        'analytics': analytics,
+    }
+
+    return render(request, 'profile/view.html', context)
+
+
+def calculate_user_analytics(user_obj):
+    """
+    Calculate dynamic analytics for a user based on actual database data
+    """
+    # Get current date and 30 days ago for comparison
+    now = timezone.now()
+    thirty_days_ago = now - timedelta(days=30)
+    
+    # Get user's content
+    user_contents = Content.objects.filter(author=user_obj, is_public=True)
+    
+    # Total downloads for user's content
+    total_downloads = user_contents.aggregate(
+        total=Sum('download_count')
+    )['total'] or 0
+    
+    # Downloads in last 30 days (if you want to track this, you'd need to modify Download model to track creation time)
+    recent_downloads = Download.objects.filter(
+        content__author=user_obj,
+        timestamp__gte=thirty_days_ago
+    ).count()
+    
+    # Calculate download growth percentage
+    if total_downloads > 0:
+        old_downloads = total_downloads - recent_downloads
+        download_growth = ((recent_downloads / max(old_downloads, 1)) * 100) if old_downloads > 0 else 100
+    else:
+        download_growth = 0
+    
+    # Content upload count
+    total_uploads = user_contents.count()
+    recent_uploads = user_contents.filter(date__gte=thirty_days_ago).count()
+    
+    # Upload growth percentage
+    if total_uploads > 0:
+        old_uploads = total_uploads - recent_uploads
+        upload_growth = ((recent_uploads / max(old_uploads, 1)) * 100) if old_uploads > 0 else 100
+    else:
+        upload_growth = 0
+    
+    # Followers data
+    total_followers = user_obj.followers.count()
+    recent_followers = Follow.objects.filter(
+        following=user_obj,
+        created_at__gte=thirty_days_ago
+    ).count()
+    
+    # Follower growth percentage
+    if total_followers > 0:
+        old_followers = total_followers - recent_followers
+        follower_growth = ((recent_followers / max(old_followers, 1)) * 100) if old_followers > 0 else 100
+    else:
+        follower_growth = 0
+    
+    # Average rating for user's content
+    avg_rating = user_contents.aggregate(
+        avg_rate=Avg('rate')
+    )['avg_rate'] or 0
+    
+    # Engagement calculation (ratings + bookmarks for user's content)
+    total_ratings = Rating.objects.filter(content__author=user_obj).count()
+    total_bookmarks = Bookmark.objects.filter(content__author=user_obj).count()
+    engagement_score = total_ratings + total_bookmarks
+    
+    # Calculate engagement percentage (this is a simplified calculation)
+    if total_uploads > 0:
+        engagement_rate = (engagement_score / (total_uploads * 2)) * 100  # Max 2 engagements per upload
+        engagement_rate = min(engagement_rate, 100)  # Cap at 100%
+    else:
+        engagement_rate = 0
+    
+    # Recent engagement
+    recent_ratings = Rating.objects.filter(
+        content__author=user_obj,
+        created_at__gte=thirty_days_ago
+    ).count()
+    recent_bookmarks = Bookmark.objects.filter(
+        content__author=user_obj,
+        created_at__gte=thirty_days_ago
+    ).count()
+    recent_engagement = recent_ratings + recent_bookmarks
+    
+    # Engagement growth
+    if engagement_score > 0:
+        old_engagement = engagement_score - recent_engagement
+        engagement_growth = ((recent_engagement / max(old_engagement, 1)) * 100) if old_engagement > 0 else 100
+    else:
+        engagement_growth = 0
+    
+    return {
+        'total_uploads': total_uploads,
+        'upload_growth': round(upload_growth, 1),
+        'total_downloads': total_downloads,
+        'download_growth': round(download_growth, 1),
+        'total_followers': total_followers,
+        'follower_growth': round(follower_growth, 1),
+        'engagement_rate': round(engagement_rate, 1),
+        'engagement_growth': round(engagement_growth, 1),
+        'avg_rating': round(avg_rating, 1),
+        'total_ratings': total_ratings,
+        'total_bookmarks': total_bookmarks,
+    }
 
 
 @login_required
@@ -242,14 +366,84 @@ def profile_edit(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Your profile has been updated!')
-            return redirect('profileview')
+            return redirect('profileview',user_id = request.user.id)
     else:
         form = ProfileForm(instance=request.user.profile)
 
     return render(request, 'profile/edit.html', {'form': form})
 
 
-# Edit content
+# Follow/Unfollow functionality
+@login_required
+@require_POST
+def toggle_follow(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    
+    # Prevent self-following
+    if request.user == target_user:
+        messages.error(request, "You cannot follow yourself.")
+        return redirect('profile_view', user_id=user_id)
+    
+    follow_obj, created = Follow.objects.get_or_create(
+        follower=request.user,
+        following=target_user
+    )
+    
+    if not created:
+        # Already following, so unfollow
+        follow_obj.delete()
+        action = 'unfollowed'
+        is_following = False
+    else:
+        # Wasn't following, now following
+        action = 'followed'
+        is_following = True
+    
+    # If it's an AJAX request, return JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'action': action,
+            'is_following': is_following,
+            'followers_count': target_user.followers.count()
+        })
+    
+    # Regular request, redirect back
+    messages.success(request, f"You have {action} {target_user.username}.")
+    return redirect('profileview',user_id=request.user.id)
+
+
+@login_required
+def following_list(request, user_id):
+    user_obj = get_object_or_404(User, id=user_id)
+    following = Follow.objects.filter(follower=user_obj).select_related('following__profile')
+    
+    context = {
+        'user_obj': user_obj,
+        'following': following,
+        'is_own_profile': request.user == user_obj,
+    }
+    
+    return render(request, 'profile/following_list.html', context)
+
+
+@login_required
+def followers_list(request, user_id):
+    user_obj = get_object_or_404(User, id=user_id)
+    followers = Follow.objects.filter(following=user_obj).select_related('follower__profile')
+    
+    context = {
+        'user_obj': user_obj,
+        'followers': followers,
+        'is_own_profile': request.user == user_obj,
+    }
+    
+    return render(request, 'profile/followers_list.html', context)
+
+# views.py
+# Use this debug version temporarily to see what's happening:
+
+@login_required
 def content_edit(request, pk):
     content = get_object_or_404(Content, pk=pk)
     if request.user != content.author:
@@ -257,16 +451,72 @@ def content_edit(request, pk):
         return redirect('content_detail', pk=pk)
 
     if request.method == 'POST':
-        form = ContentForm(request.POST, request.FILES, instance=content)
+        print(f"POST data: {request.POST}")
+        print(f"FILES data: {request.FILES}")
+        print(f"Current file: {content.file}")
+        
+        form = ContentEditForm(request.POST, request.FILES, instance=content)
+        
         if form.is_valid():
-            form.save()
-            messages.success(request, "Content updated successfully.")
-            return redirect('content_detail', pk=content.pk)
+            print("Form is valid")
+            # Get the remove_file flag from POST data
+            remove_file = request.POST.get('remove_file') == 'true'
+            print(f"Remove file flag: {remove_file}")
+            
+            # Get the new file from cleaned data
+            new_file = form.cleaned_data.get('file')
+            print(f"New file from form: {new_file}")
+            
+            # Save form but don't commit yet
+            updated_content = form.save(commit=False)
+            
+            # Handle file operations
+            if remove_file and not new_file:
+                print("Removing file without replacement")
+                if updated_content.file:
+                    old_file = updated_content.file
+                    updated_content.file = None
+                    print(f"Deleting old file: {old_file}")
+                    if old_file:
+                        try:
+                            old_file.delete(save=False)
+                            print("Old file deleted successfully")
+                        except Exception as e:
+                            print(f"Error deleting old file: {e}")
+            
+            elif new_file:
+                print(f"New file being uploaded: {new_file}")
+                # Handle old file cleanup
+                if content.file and content.file != new_file:
+                    old_file = content.file
+                    print(f"Cleaning up old file: {old_file}")
+                    try:
+                        old_file.delete(save=False)
+                        print("Old file cleaned up successfully")
+                    except Exception as e:
+                        print(f"Error cleaning up old file: {e}")
+            
+            # Now save the content
+            try:
+                updated_content.save()
+                print(f"Content saved successfully. New file: {updated_content.file}")
+                messages.success(request, "Content updated successfully.")
+                return redirect('content_detail', pk=updated_content.pk)
+            except Exception as e:
+                print(f"Error saving content: {e}")
+                messages.error(request, f"Error saving content: {str(e)}")
+        else:
+            print("Form is not valid")
+            print(f"Form errors: {form.errors}")
+            # Debug form errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"Form error - {field}: {error}")
+                    messages.error(request, f"{field.title()}: {error}")
     else:
-        form = ContentForm(instance=content)
+        form = ContentEditForm(instance=content)
 
     return render(request, 'content/content_edit.html', {'form': form, 'content': content})
-
 
 # Delete content
 @login_required
@@ -276,6 +526,7 @@ def content_delete(request, pk):
     if request.user != content.author:
         messages.error(request, "You are not authorized to delete this content.")
         return redirect('content_detail', pk=pk)
+    
 
     content.delete()
     messages.success(request, "Content deleted successfully.")
@@ -395,3 +646,36 @@ def report_content(request, pk):
         'form': form,
         'content': content
     })
+
+@login_required
+@require_POST
+def api_record_download(request, content_id):
+    content = get_object_or_404(Content, id=content_id, is_public=True)
+    Download.objects.create(user=request.user, content=content)
+    Content.objects.filter(id=content.id).update(download_count=models.F('download_count') + 1)
+    return JsonResponse({'success': True, 'download_count': Content.objects.get(pk=content.id).download_count})
+
+@require_POST
+def increment_download(request, content_id):
+    """
+    Increment download count and create download record
+    """
+    content = get_object_or_404(Content, id=content_id)
+    
+    # Increment the download count
+    content.download_count += 1
+    content.save()
+    
+    # Create download record if user is authenticated
+    if request.user.is_authenticated:
+        Download.objects.create(
+            user=request.user,
+            content=content
+        )
+    else:
+        # Create anonymous download record
+        Download.objects.create(
+            content=content
+        )
+    
+    return JsonResponse({'status': 'success', 'download_count': content.download_count})

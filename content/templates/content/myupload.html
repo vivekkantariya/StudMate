@@ -65,7 +65,7 @@
                 {% endif %}
             </div>
             <div class="card-footer">
-                <a href="{{ content.file.url }}" class="btn btn-primary download-btn" target="_blank" download>
+                <a href="{{ content.file }}" class="btn btn-primary download-btn" target="_blank" download>
                     <i class="fas fa-download me-2"></i> Download
                 </a>
                 <a href="{% url 'content_detail' content.id %}" class="btn btn-outline-secondary view-btn">

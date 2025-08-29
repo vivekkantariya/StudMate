@@ -4,16 +4,8 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<!-- Modern Hero Section -->
+<!-- Hero Section -->
 <section class="hero-section">
-  <!-- Decorative background elements -->
-  <div class="hero-decoration decoration-1"></div>
-  <div class="hero-decoration decoration-2"></div>
-
   <div class="container">
     <div class="hero-content">
       <div class="hero-text">
@@ -30,128 +22,16 @@
           </a>
         </div>
       </div>
+
       <div class="hero-visual">
-        <svg class="hero-svg" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
-          <!-- Background Elements -->
-          <defs>
-            <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.1" />
-              <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.3" />
-            </linearGradient>
-
-            <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.95" />
-              <stop offset="100%" style="stop-color:#f8fafc;stop-opacity:0.95" />
-            </linearGradient>
-
-            <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#0ea5e9" />
-              <stop offset="100%" style="stop-color:#8b5cf6" />
-            </linearGradient>
-
-            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.15" />
-            </filter>
-          </defs>
-
-          <!-- Floating Elements -->
-          <circle cx="80" cy="60" r="8" fill="url(#accentGradient)" opacity="0.6">
-            <animate attributeName="cy" values="60;50;60" dur="4s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="420" cy="80" r="6" fill="url(#accentGradient)" opacity="0.4">
-            <animate attributeName="cy" values="80;70;80" dur="5s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="450" cy="300" r="10" fill="url(#accentGradient)" opacity="0.5">
-            <animate attributeName="cy" values="300;290;300" dur="3s" repeatCount="indefinite" />
-          </circle>
-
-          <!-- Main Illustration -->
-          <!-- Computer/Tablet -->
-          <rect x="150" y="120" width="200" height="140" rx="12" fill="url(#cardGradient)" filter="url(#shadow)" />
-          <rect x="160" y="130" width="180" height="100" rx="4" fill="#1e293b" />
-
-          <!-- Screen Content -->
-          <rect x="170" y="140" width="160" height="8" rx="4" fill="url(#accentGradient)" opacity="0.8" />
-          <rect x="170" y="155" width="120" height="6" rx="3" fill="#64748b" opacity="0.6" />
-          <rect x="170" y="167" width="140" height="6" rx="3" fill="#64748b" opacity="0.4" />
-          <rect x="170" y="179" width="100" height="6" rx="3" fill="#64748b" opacity="0.4" />
-
-          <!-- Books Stack -->
-          <rect x="50" y="200" width="80" height="12" rx="2" fill="#ef4444" opacity="0.9" filter="url(#shadow)">
-            <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite" />
-          </rect>
-          <rect x="55" y="190" width="75" height="12" rx="2" fill="#0ea5e9" opacity="0.9">
-            <animate attributeName="opacity" values="0.9;1;0.9" dur="3.5s" repeatCount="indefinite" />
-          </rect>
-          <rect x="60" y="180" width="70" height="12" rx="2" fill="#8b5cf6" opacity="0.9">
-            <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite" />
-          </rect>
-
-          <!-- People Silhouettes -->
-          <!-- Person 1 -->
-          <circle cx="100" cy="300" r="20" fill="url(#accentGradient)" opacity="0.8" />
-          <rect x="85" y="320" width="30" height="40" rx="15" fill="url(#accentGradient)" opacity="0.7" />
-
-          <!-- Person 2 -->
-          <circle cx="400" cy="290" r="18" fill="#10b981" opacity="0.8" />
-          <rect x="387" y="308" width="26" height="35" rx="13" fill="#10b981" opacity="0.7" />
-
-          <!-- Collaboration Lines -->
-          <line x1="120" y1="310" x2="180" y2="250" stroke="url(#accentGradient)" stroke-width="2" opacity="0.6"
-            stroke-dasharray="5,5">
-            <animate attributeName="stroke-dashoffset" values="0;10" dur="2s" repeatCount="indefinite" />
-          </line>
-          <line x1="380" y1="300" x2="320" y2="250" stroke="#10b981" stroke-width="2" opacity="0.6"
-            stroke-dasharray="5,5">
-            <animate attributeName="stroke-dashoffset" values="10;0" dur="2s" repeatCount="indefinite" />
-          </line>
-
-          <!-- Documents/Papers Flying -->
-          <g opacity="0.7">
-            <rect x="300" y="100" width="20" height="25" rx="2" fill="white" filter="url(#shadow)">
-              <animateTransform attributeName="transform" type="translate" values="0,0; 10,-5; 0,0" dur="3s"
-                repeatCount="indefinite" />
-            </rect>
-            <line x1="305" y1="108" x2="315" y2="108" stroke="#64748b" stroke-width="1" />
-            <line x1="305" y1="112" x2="313" y2="112" stroke="#64748b" stroke-width="1" />
-            <line x1="305" y1="116" x2="314" y2="116" stroke="#64748b" stroke-width="1" />
-          </g>
-
-          <g opacity="0.6">
-            <rect x="380" y="150" width="18" height="22" rx="2" fill="white" filter="url(#shadow)">
-              <animateTransform attributeName="transform" type="translate" values="0,0; -8,-3; 0,0" dur="4s"
-                repeatCount="indefinite" />
-            </rect>
-            <line x1="384" y1="157" x2="393" y2="157" stroke="#64748b" stroke-width="1" />
-            <line x1="384" y1="161" x2="391" y2="161" stroke="#64748b" stroke-width="1" />
-            <line x1="384" y1="165" x2="392" y2="165" stroke="#64748b" stroke-width="1" />
-          </g>
-
-          <!-- Growth/Success Icon -->
-          <g transform="translate(380, 40)">
-            <circle cx="0" cy="0" r="15" fill="#10b981" opacity="0.2">
-              <animate attributeName="r" values="15;18;15" dur="2s" repeatCount="indefinite" />
-            </circle>
-            <path d="M-8,-2 L0,-8 L8,-2 L4,-2 L4,6 L-4,6 Z" fill="#10b981">
-              <animateTransform attributeName="transform" type="scale" values="1;1.1;1" dur="2s"
-                repeatCount="indefinite" />
-            </path>
-          </g>
-
-          <!-- Knowledge Sharing Symbols -->
-          <g transform="translate(70, 120)" opacity="0.8">
-            <circle cx="0" cy="0" r="12" fill="none" stroke="url(#accentGradient)" stroke-width="2"
-              stroke-dasharray="3,3">
-              <animateTransform attributeName="transform" type="rotate" values="0;360" dur="8s"
-                repeatCount="indefinite" />
-            </circle>
-            <circle cx="0" cy="0" r="3" fill="url(#accentGradient)" />
-          </g>
-        </svg>
+        <img src="{% static 'images/heroimg.svg' %}" 
+             alt="Learning collaboration illustration" 
+             class="hero-svg">
       </div>
     </div>
   </div>
 </section>
+
 
 <!-- Stats Section -->
 <section class="stats-section">
@@ -207,35 +87,27 @@
               <div class="filter-buttons" id="contentTypeGroup" role="group" aria-label="Content type filters">
                 <input type="radio" class="btn-check" name="content_type" id="allTypes" value="" autocomplete="off"
                   checked>
-                <label class="btn btn-outline-primary" for="allTypes">
-                  <i class="fas fa-globe me-1"></i> All
-                </label>
+                <label class="btn btn-outline-primary" for="allTypes">All</label>
 
                 <input type="radio" class="btn-check" name="content_type" id="typeNote" value="note" autocomplete="off">
-                <label class="btn btn-outline-primary" for="typeNote">
-                  <i class="fas fa-sticky-note me-1"></i> Notes
-                </label>
+                <label class="btn btn-outline-primary" for="typeNote">Notes</label>
 
                 <input type="radio" class="btn-check" name="content_type" id="typePrac" value="prac" autocomplete="off">
-                <label class="btn btn-outline-primary" for="typePrac">
-                  <i class="fas fa-flask me-1"></i> Practicals
-                </label>
+                <label class="btn btn-outline-primary" for="typePrac">Practicals</label>
 
                 <input type="radio" class="btn-check" name="content_type" id="typeAss" value="ass" autocomplete="off">
-                <label class="btn btn-outline-primary" for="typeAss">
-                  <i class="fas fa-tasks me-1"></i> Assignments
-                </label>
+                <label class="btn btn-outline-primary" for="typeAss">Assignments</label>
               </div>
             </div>
 
             <div class="filter-group">
               <label for="sortSelect">Sort By</label>
               <select name="sort_by" id="sortSelect" class="form-select" aria-label="Sort options">
-                <option value="-date" selected>📅 Newest First</option>
-                <option value="date">📅 Oldest First</option>
-                <option value="-rate">⭐ Highest Rated</option>
-                <option value="-download_count">📥 Most Downloaded</option>
-                <option value="name">🔤 Name A-Z</option>
+                <option value="-date" selected>Newest First</option>
+                <option value="date">Oldest First</option>
+                <option value="-rate">Highest Rated</option>
+                <option value="-download_count">Most Downloaded</option>
+                <option value="name">Name A-Z</option>
               </select>
             </div>
           </div>
@@ -256,7 +128,6 @@
       {% for item in data %}
       <div class="resource-card">
         <div class="card-header">
-          <!-- File icon based on type -->
           <div
             class="file-icon {% if item.file.name|slice:'-4:' == '.pdf' %}pdf{% elif item.file.name|slice:'-5:' == '.docx' %}word{% elif item.file.name|slice:'-4:' == '.zip' %}archive{% else %}default{% endif %}">
             <i
@@ -329,8 +200,8 @@
             </button>
           </form>
           {% endif %}
-
         </div>
+
         {% if request.user.is_authenticated and request.user == item.author %}
         <div class="owner-actions">
           <a href="{% url 'content_edit' item.id %}" class="btn btn-sm btn-outline-secondary">
@@ -357,6 +228,7 @@
       </div>
       {% endfor %}
     </div>
+
     <!-- Pagination -->
     {% if is_paginated %}
     <nav class="pagination-container">
@@ -463,8 +335,7 @@
       <a href="{% url 'content_create' %}" class="btn btn-light btn-lg">
         <i class="fas fa-plus me-2"></i>Upload Content Now
       </a>
-      {% if user.is_authenticated %}
-      {% else %}
+      {% if not user.is_authenticated %}
       <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg cta-btn">
         <i class="fas fa-user-plus me-2"></i> Create Account
       </a>
@@ -475,30 +346,12 @@
 
 <script>
   function resetFilters() {
-    // Reset all form elements
     document.getElementById('allTypes').checked = true;
     document.getElementById('sortSelect').selectedIndex = 0;
-
-    // Redirect to clean URL without filters
     window.location.href = window.location.pathname;
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    const radioButtons = document.querySelectorAll('.btn-check');
-    radioButtons.forEach(radio => {
-      radio.addEventListener('change', function () {
-        // Add visual feedback when selection changes
-        const label = document.querySelector(`label[for="${this.id}"]`);
-        if (label) {
-          label.style.transform = 'scale(1.05)';
-          setTimeout(() => {
-            label.style.transform = 'scale(1)';
-          }, 150);
-        }
-      });
-    });
-
-    // Handle collapse toggle without Bootstrap JS
     const filterToggle = document.querySelector('.filter-toggle');
     const filterCollapse = document.getElementById('filterCollapse');
 
@@ -516,7 +369,6 @@
       });
     }
 
-    // Smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -527,17 +379,6 @@
             block: 'start'
           });
         }
-      });
-    });
-
-    // Auto-submit form on filter changes for better UX
-    const formSelects = document.querySelectorAll('.form-select');
-    const radioInputs = document.querySelectorAll('.btn-check');
-
-    formSelects.forEach(select => {
-      select.addEventListener('change', function () {
-        // Auto-submit could be added here if desired
-        // this.closest('form').submit();
       });
     });
   });

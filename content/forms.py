@@ -40,25 +40,30 @@ class CustomUserForm(UserCreationForm):
 class ContentForm(forms.ModelForm):
     class Meta:
         model = Content
-        fields = ['name', 'desc', 'content_type', 'tags', 'file']
+        fields = ['name', 'desc', 'content_type', 'tags', 'file','is_public']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'desc': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'content_type': forms.Select(attrs={'class': 'form-select'}),
             'tags': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. physics, formulas, semester2'}),
             'file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
+    # forms.py
     def clean_file(self):
         file = self.cleaned_data.get('file')
+        print(f"File in clean_file: {file}")  # Debug
         if file:
             # file type
             if not file.name.endswith(('.pdf', '.docx', '.zip')):
+                print(f"Invalid file type: {file.name}")  # Debug
                 raise forms.ValidationError("Only .pdf, .docx, or .zip files are allowed.")
             
             # file size 
-            if file.size > 10 * 1024 * 1024:  #mb
-                raise forms.ValidationError("File size should not exceed 5MB.")
+            if file.size > 10 * 1024 * 1024:  # 10MB
+                print(f"File too large: {file.size}")  # Debug
+                raise forms.ValidationError("File size should not exceed 10MB.")
         return file
 
     def clean_tags(self):
@@ -93,3 +98,52 @@ class ReportForm(forms.ModelForm):
             'reason': forms.Select(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+class ContentEditForm(forms.ModelForm):
+    remove_file = forms.BooleanField(required=False, widget=forms.HiddenInput())
+    
+    class Meta:
+        model = Content
+        fields = ['name', 'desc', 'content_type', 'tags', 'file', 'is_public']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'desc': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'content_type': forms.Select(attrs={'class': 'form-select'}),
+            'tags': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. physics, formulas, semester2'}),
+            'file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def clean_file(self):
+        file = self.cleaned_data.get('file')
+        remove_file = self.cleaned_data.get('remove_file', False)
+        
+        # Only validate if a new file is provided
+        if file and hasattr(file, 'name'):  # New file uploaded
+            if not file.name.endswith(('.pdf', '.docx', '.zip')):
+                raise forms.ValidationError("Only .pdf, .docx, or .zip files are allowed.")
+            if file.size > 10 * 1024 * 1024:
+                raise forms.ValidationError("File size should not exceed 10MB.")
+        
+        return file
+
+    def clean_tags(self):
+        tags_str = self.cleaned_data['tags']
+        tag_set = set(tag.strip().lower() for tag in tags_str.split(',') if tag.strip())
+        if not (3 <= len(tag_set) <= 5):
+            raise forms.ValidationError("Please enter between 3 to 5 unique tags.")
+        return ', '.join(tag_set)
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Handle file removal
+        if self.cleaned_data.get('remove_file', False) and not self.cleaned_data.get('file'):
+            # Remove the file if remove_file is True and no new file is provided
+            if instance.file:
+                instance.file.delete(save=False)
+                instance.file = None
+        
+        if commit:
+            instance.save()
+        return instance

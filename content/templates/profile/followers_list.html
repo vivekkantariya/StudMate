@@ -1,0 +1,180 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center border-0">
+                    <div>
+                        <h4 class="mb-0 fw-bold">
+                            <i class="fas fa-users me-2 text-primary"></i>
+                            {% if is_own_profile %}
+                                My Followers
+                            {% else %}
+                                {{ user_obj.username }}'s Followers
+                            {% endif %}
+                            <span class="badge bg-primary ms-2">{{ followers.count }}</span>
+                        </h4>
+                        <p class="text-muted small mb-0">
+                            {% if is_own_profile %}
+                                People who follow your updates
+                            {% else %}
+                                People following {{ user_obj.username }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <a href="{% url 'profileview' user_obj.id %}" class="btn btn-outline-primary rounded-pill">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Profile
+                    </a>
+                </div>
+                <div class="card-body px-0 py-3">
+                    {% if followers %}
+                        <div class="row g-3">
+                            {% for follow in followers %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="follower-card p-3 rounded-3 h-100">
+                                    <div class="d-flex align-items-start">
+                                        <div class="follower-avatar me-3 position-relative">
+                                            <a href="{% url 'profileview' follow.follower.id %}">
+                                                {% if follow.follower.profile.avatar %}
+                                                    <img src="{{ follow.follower.profile.avatar.url }}" 
+                                                         alt="{{ follow.follower.username }}" 
+                                                         class="rounded-circle shadow-sm" 
+                                                         style="width: 56px; height: 56px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                                         style="width: 56px; height: 56px; background-color: #f1f5f9;">
+                                                        <i class="fas fa-user text-muted"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </a>
+                                            {% if user in follow.follower.followers.all %}
+                                            <span class="position-absolute bottom-0 end-0 bg-success rounded-circle p-1 border border-2 border-white" 
+                                                  style="width: 14px; height: 14px;" 
+                                                  title="Follows you back"></span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="follower-info flex-grow-1">
+                                            <h6 class="mb-1 fw-bold">
+                                                <a href="{% url 'profileview' follow.follower.id %}" 
+                                                   class="text-decoration-none text-dark">
+                                                    {{ follow.follower.username }}
+                                                </a>
+                                            </h6>
+                                            <p class="text-muted mb-1 small">
+                                                {% if follow.follower.profile.institution %}
+                                                    <i class="fas fa-university me-1"></i>{{ follow.follower.profile.institution }}
+                                                {% else %}
+                                                    <span class="text-muted">No institution</span>
+                                                {% endif %}
+                                            </p>
+                                            <div class="d-flex align-items-center small text-muted">
+                                                <span class="me-2">
+                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    {{ follow.created_at|date:"M d, Y" }}
+                                                </span>
+                                                <span>
+                                                    <i class="fas fa-users me-1"></i>
+                                                    {{ follow.follower.followers.count }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% if user.is_authenticated and user != follow.follower %}
+                                        <div class="follower-actions ms-2">
+                                            <form method="post" action="{% url 'toggle_follow' follow.follower.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" 
+                                                        class="btn btn-sm {% if user in follow.follower.followers.all %}btn-outline-secondary{% else %}btn-primary{% endif %} rounded-pill px-3">
+                                                    {% if user in follow.follower.followers.all %}
+                                                        Following
+                                                    {% else %}
+                                                        Follow
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="empty-state-icon bg-soft-primary rounded-circle p-4 mb-3">
+                                <i class="fas fa-users fa-3x text-primary"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3">
+                                {% if is_own_profile %}
+                                    No followers yet
+                                {% else %}
+                                    {{ user_obj.username }} doesn't have followers
+                                {% endif %}
+                            </h4>
+                            <p class="text-muted mb-4">
+                                {% if is_own_profile %}
+                                    Share your knowledge and engage with others to grow your network.
+                                {% else %}
+                                    Be the first to follow {{ user_obj.username }}!
+                                {% endif %}
+                            </p>
+                            {% if is_own_profile %}
+                            <a href="{% url 'home' %}" class="btn btn-primary rounded-pill px-4">
+                                <i class="fas fa-rocket me-1"></i>
+                                Get Started
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.follower-card {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+}
+
+.follower-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 123, 255, 0.3);
+}
+
+.follower-info h6 a:hover {
+    color: #0d6efd !important;
+}
+
+.avatar-placeholder {
+    border: 1px solid #dee2e6;
+}
+
+.empty-state-icon {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+}
+
+@media (max-width: 768px) {
+    .follower-card {
+        padding: 1rem !important;
+    }
+    
+    .follower-actions {
+        margin-top: 0.75rem;
+        width: 100%;
+    }
+    
+    .follower-actions button {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

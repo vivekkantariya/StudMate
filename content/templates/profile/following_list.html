@@ -1,0 +1,192 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center border-0">
+                    <div>
+                        <h4 class="mb-0 fw-bold">
+                            <i class="fas fa-user-plus me-2 text-success"></i>
+                            {% if is_own_profile %}
+                                Following
+                            {% else %}
+                                {{ user_obj.username }} is Following
+                            {% endif %}
+                            <span class="badge bg-success ms-2">{{ following.count }}</span>
+                        </h4>
+                        <p class="text-muted small mb-0">
+                            {% if is_own_profile %}
+                                People you're following
+                            {% else %}
+                                People followed by {{ user_obj.username }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <a href="{% url 'profileview' user_obj.id %}" class="btn btn-outline-secondary rounded-pill">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Profile
+                    </a>
+                </div>
+                <div class="card-body px-0 py-3">
+                    {% if following %}
+                        <div class="row g-3">
+                            {% for follow in following %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="following-card p-3 rounded-3 h-100">
+                                    <div class="d-flex align-items-start">
+                                        <div class="following-avatar me-3">
+                                            <a href="{% url 'profileview' follow.following.id %}">
+                                                {% if follow.following.profile.avatar %}
+                                                    <img src="{{ follow.following.profile.avatar.url }}" 
+                                                         alt="{{ follow.following.username }}" 
+                                                         class="rounded-circle shadow-sm" 
+                                                         style="width: 56px; height: 56px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                                         style="width: 56px; height: 56px; background-color: #f1f5f9;">
+                                                        <i class="fas fa-user text-muted"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </a>
+                                        </div>
+                                        <div class="following-info flex-grow-1">
+                                            <h6 class="mb-1 fw-bold">
+                                                <a href="{% url 'profileview' follow.following.id %}" 
+                                                   class="text-decoration-none text-dark">
+                                                    {{ follow.following.username }}
+                                                </a>
+                                            </h6>
+                                            <p class="text-muted mb-1 small">
+                                                {% if follow.following.profile.institution %}
+                                                    <i class="fas fa-university me-1"></i>{{ follow.following.profile.institution }}
+                                                {% else %}
+                                                    <span class="text-muted">No institution</span>
+                                                {% endif %}
+                                            </p>
+                                            <div class="user-stats d-flex small text-muted mb-2">
+                                                <span class="me-3">
+                                                    <i class="fas fa-users me-1"></i>
+                                                    {{ follow.following.followers.count }} followers
+                                                </span>
+                                                <span>
+                                                    <i class="fas fa-file-alt me-1"></i>
+                                                    {{ follow.following.contents.count }} posts
+                                                </span>
+                                            </div>
+                                            <div class="follow-date small text-muted">
+                                                <i class="fas fa-calendar-alt me-1"></i>
+                                                Following since {{ follow.created_at|date:"M d, Y" }}
+                                            </div>
+                                        </div>
+                                        {% if user.is_authenticated and user != follow.following %}
+                                        <div class="following-actions ms-2">
+                                            <form method="post" action="{% url 'toggle_follow' follow.following.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" 
+                                                        class="btn btn-sm {% if user in follow.following.followers.all %}btn-outline-success{% else %}btn-outline-danger{% endif %} rounded-pill px-3">
+                                                    {% if user in follow.following.followers.all %}
+                                                        Following
+                                                    {% else %}
+                                                        Unfollow
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="empty-state-icon bg-soft-success rounded-circle p-4 mb-3">
+                                <i class="fas fa-user-plus fa-3x text-success"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3">
+                                {% if is_own_profile %}
+                                    Not following anyone
+                                {% else %}
+                                    {{ user_obj.username }} isn't following anyone
+                                {% endif %}
+                            </h4>
+                            <p class="text-muted mb-4">
+                                {% if is_own_profile %}
+                                    Follow people to see their latest updates in your feed.
+                                {% else %}
+                                    {{ user_obj.username }} hasn't started following others yet.
+                                {% endif %}
+                            </p>
+                            {% if is_own_profile %}
+                            <a href="{% url 'home' %}" class="btn btn-success rounded-pill px-4">
+                                <i class="fas fa-compass me-1"></i>
+                                Explore Users
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.following-card {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+}
+
+.following-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: rgba(25, 135, 84, 0.3);
+}
+
+.following-info h6 a:hover {
+    color: #198754 !important;
+}
+
+.avatar-placeholder {
+    border: 1px solid #dee2e6;
+}
+
+.empty-state-icon {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+}
+
+.user-stats i {
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .following-card {
+        padding: 1rem !important;
+    }
+    
+    .following-actions {
+        margin-top: 0.75rem;
+        width: 100%;
+    }
+    
+    .following-actions button {
+        width: 100%;
+    }
+    
+    .user-stats {
+        flex-direction: column;
+    }
+    
+    .user-stats span {
+        margin-right: 0 !important;
+        margin-bottom: 0.25rem;
+    }
+}
+</style>
+{% endblock %}

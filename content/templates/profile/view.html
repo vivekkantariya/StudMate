@@ -18,7 +18,7 @@
                     <div class="avatar-status"></div>
                 </div>
                 <div class="profile-info">
-                    <h1 class="profile-name">{{ user.username }}</h1>
+                    <h1 class="profile-name">{{ profile.user.username }}</h1>
                     <p class="profile-institution">{{ profile.institution|default:"No institution specified" }}</p>
                     <div class="profile-stats">
                         <div class="stat-item">
@@ -29,12 +29,37 @@
                             <span class="stat-number">{{ bookmarks|length }}</span>
                             <span class="stat-label">Bookmarks</span>
                         </div>
+                        <div class="stat-item">
+                            <a href="{% url 'followers_list' profile.user.id %}" class="stat-link">
+                                <span class="stat-number" id="followers-count">{{ followers_count }}</span>
+                                <span class="stat-label">Followers</span>
+                            </a>
+                        </div>
+                        <div class="stat-item">
+                            <a href="{% url 'following_list' profile.user.id %}" class="stat-link">
+                                <span class="stat-number">{{ following_count }}</span>
+                                <span class="stat-label">Following</span>
+                            </a>
+                        </div>
                     </div>
                     <div class="profile-actions">
-                        <a href="{% url 'profileedit' %}" class="btn btn-primary">
-                            <i class="fas fa-edit"></i>
-                            Edit Profile
-                        </a>
+                        {% if is_own_profile %}
+                            <a href="{% url 'profileedit' %}" class="btn btn-primary">
+                                <i class="fas fa-edit"></i>
+                                Edit Profile
+                            </a>
+                        {% else %}
+                            {% if user.is_authenticated %}
+                                <form method="post" action="{% url 'toggle_follow' profile.user.id %}" class="follow-form" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn {% if is_following %}btn-secondary{% else %}btn-primary{% endif %} follow-btn" 
+                                            data-user-id="{{ profile.user.id }}">
+                                        <i class="fas {% if is_following %}fa-user-minus{% else %}fa-user-plus{% endif %}"></i>
+                                        <span class="follow-text">{% if is_following %}Unfollow{% else %}Follow{% endif %}</span>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
                         <button class="btn btn-secondary">
                             <i class="fas fa-share-alt"></i>
                             Share
@@ -53,14 +78,16 @@
                 </button>
                 <button class="nav-tab" data-tab="uploads">
                     <i class="fas fa-upload"></i>
-                    <span>My Uploads</span>
+                    <span>Uploads</span>
                     <span class="nav-badge">{{ uploads|length }}</span>
                 </button>
+                {% if is_own_profile %}
                 <button class="nav-tab" data-tab="bookmarks">
                     <i class="fas fa-bookmark"></i>
                     <span>Bookmarks</span>
                     <span class="nav-badge">{{ bookmarks|length }}</span>
                 </button>
+                {% endif %}
                 <button class="nav-tab" data-tab="activity">
                     <i class="fas fa-chart-line"></i>
                     <span>Analytics</span>
@@ -87,8 +114,10 @@
                             {% else %}
                             <div class="empty-state compact">
                                 <i class="fas fa-user-edit"></i>
-                                <p>Add a bio to tell others about yourself</p>
+                                <p>{% if is_own_profile %}Add a bio to tell others about yourself{% else %}No bio available{% endif %}</p>
+                                {% if is_own_profile %}
                                 <a href="{% url 'profileedit' %}" class="btn btn-outline">Add Bio</a>
+                                {% endif %}
                             </div>
                             {% endif %}
                         </div>
@@ -145,15 +174,17 @@
                         </div>
                         <div class="card-body">
                             <div class="info-grid">
+                                {% if is_own_profile %}
                                 <div class="info-item">
                                     <div class="info-icon">
                                         <i class="fas fa-envelope"></i>
                                     </div>
                                     <div class="info-content">
                                         <span class="info-label">Email</span>
-                                        <span class="info-value">{{ user.email }}</span>
+                                        <span class="info-value">{{ profile.user.email }}</span>
                                     </div>
                                 </div>
+                                {% endif %}
                                 <div class="info-item">
                                     <div class="info-icon">
                                         <i class="fas fa-globe"></i>
@@ -181,13 +212,63 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Quick Stats Overview -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-pie"></i>
+                                Quick Stats
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="quick-stats-grid">
+                                <div class="quick-stat">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <span class="stat-number">{{ analytics.avg_rating }}</span>
+                                        <span class="stat-label">Avg Rating</span>
+                                    </div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-download"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <span class="stat-number">{{ analytics.total_downloads }}</span>
+                                        <span class="stat-label">Total Downloads</span>
+                                    </div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-heart"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <span class="stat-number">{{ analytics.total_ratings }}</span>
+                                        <span class="stat-label">Ratings Received</span>
+                                    </div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-bookmark"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <span class="stat-number">{{ analytics.total_bookmarks }}</span>
+                                        <span class="stat-label">Times Bookmarked</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Uploads Tab -->
             <div class="tab-content" id="uploads">
                 <div class="tab-header">
-                    <h2>My Uploads</h2>
+                    <h2>{% if is_own_profile %}My Uploads{% else %}{{ profile.user.username }}'s Uploads{% endif %}</h2>
                     <div class="tab-actions">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
@@ -195,9 +276,10 @@
                         </div>
                         <select class="filter-select">
                             <option value="">All Types</option>
-                            <option value="pdf">PDF</option>
-                            <option value="doc">Document</option>
-                            <option value="image">Image</option>
+                            <option value="note">Notes</option>
+                            <option value="assignment">Assignment</option>
+                            <option value="practical">Practical</option>
+                            <option value="project">Project</option>
                         </select>
                     </div>
                 </div>
@@ -205,28 +287,55 @@
                 {% if uploads %}
                 <div class="content-list" id="uploads-list">
                     {% for item in uploads %}
-                    <div class="content-item" data-type="{{ item.get_content_type_display|lower }}">
+                    <div class="content-item" data-type="{{ item.content_type }}">
                         <div class="item-thumbnail">
-                            <i class="fas fa-file-alt"></i>
+                            {% if item.content_type == 'note' %}
+                                <i class="fas fa-sticky-note"></i>
+                            {% elif item.content_type == 'ass' %}
+                                <i class="fas fa-tasks"></i>
+                            {% elif item.content_type == 'prac' %}
+                                <i class="fas fa-code"></i>
+                            {% elif item.content_type == 'project' %}
+                                <i class="fas fa-project-diagram"></i>
+                            {% else %}
+                                <i class="fas fa-file-alt"></i>
+                            {% endif %}
                         </div>
                         <div class="item-content">
-                            <h4 class="item-title">{{ item.name }}</h4>
+                            <h4 class="item-title">
+                                <a href="{% url 'content_detail' item.pk %}">{{ item.name }}</a>
+                            </h4>
                             <p class="item-description">{{ item.desc|truncatewords:15 }}</p>
                             <div class="item-meta">
                                 <span class="item-date">{{ item.date|date:"M d, Y" }}</span>
                                 <span class="item-type">{{ item.get_content_type_display }}</span>
+                                <span class="item-stats">
+                                    <i class="fas fa-download"></i> {{ item.download_count }}
+                                    <i class="fas fa-star"></i> {{ item.rate }}
+                                </span>
                             </div>
+                            {% if item.tags %}
+                            <div class="item-tags">
+                                {% for tag in item.tag_list %}
+                                <span class="tag">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="item-actions">
-                            <button class="action-btn" title="View">
+                            <a href="{% url 'content_detail' item.pk %}" class="action-btn" title="View">
                                 <i class="fas fa-eye"></i>
-                            </button>
-                            <a href="{{ item.file.url }}" class="action-btn" title="Download" download>
+                            </a>
+                            {% if item.file %}
+                            <a href="{{ item.file.url }}" class="action-btn" title="Download" download onclick="recordDownload({{ item.id }})">
                                 <i class="fas fa-download"></i>
                             </a>
-                            <button class="action-btn" title="Share">
-                                <i class="fas fa-share"></i>
-                            </button>
+                            {% endif %}
+                            {% if is_own_profile %}
+                            <a href="{% url 'content_edit' item.pk %}" class="action-btn" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -235,13 +344,16 @@
                 <div class="empty-state">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <h4>No uploads yet</h4>
-                    <p>Start sharing your documents with the community</p>
-                    <a href="#" class="btn btn-primary">Upload Your First Document</a>
+                    <p>{% if is_own_profile %}Start sharing your documents with the community{% else %}This user hasn't uploaded any documents yet{% endif %}</p>
+                    {% if is_own_profile %}
+                    <a href="{% url 'content_create' %}" class="btn btn-primary">Upload Your First Document</a>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
 
-            <!-- Bookmarks Tab -->
+            <!-- Bookmarks Tab (Only visible to profile owner) -->
+            {% if is_own_profile %}
             <div class="tab-content" id="bookmarks">
                 <div class="tab-header">
                     <h2>My Bookmarks</h2>
@@ -258,24 +370,39 @@
                     {% for item in bookmarks %}
                     <div class="content-item">
                         <div class="item-thumbnail">
-                            <i class="fas fa-bookmark"></i>
+                            {% if item.content_type == 'note' %}
+                                <i class="fas fa-sticky-note"></i>
+                            {% elif item.content_type == 'ass' %}
+                                <i class="fas fa-tasks"></i>
+                            {% elif item.content_type == 'prac' %}
+                                <i class="fas fa-code"></i>
+                            {% elif item.content_type == 'project' %}
+                                <i class="fas fa-project-diagram"></i>
+                            {% else %}
+                                <i class="fas fa-bookmark"></i>
+                            {% endif %}
                         </div>
                         <div class="item-content">
-                            <h4 class="item-title">{{ item.name }}</h4>
+                            <h4 class="item-title">
+                                <a href="{% url 'content_detail' item.pk %}">{{ item.name }}</a>
+                            </h4>
                             <p class="item-description">{{ item.desc|truncatewords:15 }}</p>
                             <div class="item-meta">
                                 <span class="item-date">{{ item.date|date:"M d, Y" }}</span>
                                 <span class="item-type">{{ item.get_content_type_display }}</span>
+                                <span class="item-author">by {{ item.author.username }}</span>
                             </div>
                         </div>
                         <div class="item-actions">
-                            <button class="action-btn" title="View">
+                            <a href="{% url 'content_detail' item.pk %}" class="action-btn" title="View">
                                 <i class="fas fa-eye"></i>
-                            </button>
+                            </a>
+                            {% if item.file %}
                             <a href="{{ item.file.url }}" class="action-btn" title="Download" download>
                                 <i class="fas fa-download"></i>
                             </a>
-                            <button class="action-btn remove-bookmark" title="Remove Bookmark">
+                            {% endif %}
+                            <button class="action-btn remove-bookmark" title="Remove Bookmark" data-content-id="{{ item.id }}">
                                 <i class="fas fa-bookmark-slash"></i>
                             </button>
                         </div>
@@ -287,62 +414,160 @@
                     <i class="fas fa-bookmark"></i>
                     <h4>No bookmarks yet</h4>
                     <p>Save interesting documents for later</p>
-                    <a href="#" class="btn btn-primary">Browse Documents</a>
+                    <a href="{% url 'content_list' %}" class="btn btn-primary">Browse Documents</a>
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
 
             <!-- Analytics Tab -->
             <div class="tab-content" id="activity">
                 <div class="tab-header">
-                    <h2>Analytics</h2>
+                    <h2>{% if is_own_profile %}My Analytics{% else %}{{ profile.user.username }}'s Analytics{% endif %}</h2>
+                    <p class="tab-subtitle">Performance metrics over the last 30 days</p>
                 </div>
                 
                 <div class="analytics-grid">
                     <div class="analytics-card">
-                        <div class="analytics-icon">
-                            <i class="fas fa-eye"></i>
+                        <div class="analytics-header">
+                            <div class="analytics-icon">
+                                <i class="fas fa-upload"></i>
+                            </div>
+                            <div class="analytics-trend {% if analytics.upload_growth >= 0 %}positive{% else %}negative{% endif %}">
+                                <i class="fas fa-arrow-{% if analytics.upload_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                                <span>{{ analytics.upload_growth }}%</span>
+                            </div>
                         </div>
                         <div class="analytics-content">
-                            <h3>Profile Views</h3>
-                            <p class="analytics-number">1,234</p>
-                            <span class="analytics-change positive">+12%</span>
+                            <h3>Total Uploads</h3>
+                            <p class="analytics-number">{{ analytics.total_uploads }}</p>
+                            <span class="analytics-change {% if analytics.upload_growth >= 0 %}positive{% else %}negative{% endif %}">
+                                {% if analytics.upload_growth >= 0 %}+{% endif %}{{ analytics.upload_growth }}% this month
+                            </span>
                         </div>
                     </div>
                     
                     <div class="analytics-card">
-                        <div class="analytics-icon">
-                            <i class="fas fa-download"></i>
+                        <div class="analytics-header">
+                            <div class="analytics-icon">
+                                <i class="fas fa-download"></i>
+                            </div>
+                            <div class="analytics-trend {% if analytics.download_growth >= 0 %}positive{% else %}negative{% endif %}">
+                                <i class="fas fa-arrow-{% if analytics.download_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                                <span>{{ analytics.download_growth }}%</span>
+                            </div>
                         </div>
                         <div class="analytics-content">
-                            <h3>Downloads</h3>
-                            <p class="analytics-number">567</p>
-                            <span class="analytics-change positive">+8%</span>
+                            <h3>Total Downloads</h3>
+                            <p class="analytics-number">{{ analytics.total_downloads }}</p>
+                            <span class="analytics-change {% if analytics.download_growth >= 0 %}positive{% else %}negative{% endif %}">
+                                {% if analytics.download_growth >= 0 %}+{% endif %}{{ analytics.download_growth }}% this month
+                            </span>
                         </div>
                     </div>
                     
                     <div class="analytics-card">
-                        <div class="analytics-icon">
-                            <i class="fas fa-thumbs-up"></i>
+                        <div class="analytics-header">
+                            <div class="analytics-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="analytics-trend {% if analytics.follower_growth >= 0 %}positive{% else %}negative{% endif %}">
+                                <i class="fas fa-arrow-{% if analytics.follower_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                                <span>{{ analytics.follower_growth }}%</span>
+                            </div>
                         </div>
                         <div class="analytics-content">
-                            <h3>Likes</h3>
-                            <p class="analytics-number">89</p>
-                            <span class="analytics-change positive">+15%</span>
+                            <h3>Followers</h3>
+                            <p class="analytics-number">{{ analytics.total_followers }}</p>
+                            <span class="analytics-change {% if analytics.follower_growth >= 0 %}positive{% else %}negative{% endif %}">
+                                {% if analytics.follower_growth >= 0 %}+{% endif %}{{ analytics.follower_growth }}% this month
+                            </span>
                         </div>
                     </div>
                     
                     <div class="analytics-card">
-                        <div class="analytics-icon">
-                            <i class="fas fa-chart-line"></i>
+                        <div class="analytics-header">
+                            <div class="analytics-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="analytics-trend {% if analytics.engagement_growth >= 0 %}positive{% else %}negative{% endif %}">
+                                <i class="fas fa-arrow-{% if analytics.engagement_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                                <span>{{ analytics.engagement_growth }}%</span>
+                            </div>
                         </div>
                         <div class="analytics-content">
-                            <h3>Engagement</h3>
-                            <p class="analytics-number">94%</p>
-                            <span class="analytics-change positive">+3%</span>
+                            <h3>Engagement Rate</h3>
+                            <p class="analytics-number">{{ analytics.engagement_rate }}%</p>
+                            <span class="analytics-change {% if analytics.engagement_growth >= 0 %}positive{% else %}negative{% endif %}">
+                                {% if analytics.engagement_growth >= 0 %}+{% endif %}{{ analytics.engagement_growth }}% this month
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Additional Analytics Cards -->
+                    <div class="analytics-card">
+                        <div class="analytics-header">
+                            <div class="analytics-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="analytics-content">
+                            <h3>Average Rating</h3>
+                            <p class="analytics-number">{{ analytics.avg_rating }}<span class="rating-scale">/5.0</span></p>
+                            <span class="analytics-description">Based on {{ analytics.total_ratings }} rating{{ analytics.total_ratings|pluralize }}</span>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card">
+                        <div class="analytics-header">
+                            <div class="analytics-icon">
+                                <i class="fas fa-bookmark"></i>
+                            </div>
+                        </div>
+                        <div class="analytics-content">
+                            <h3>Times Bookmarked</h3>
+                            <p class="analytics-number">{{ analytics.total_bookmarks }}</p>
+                            <span class="analytics-description">Your content was saved {{ analytics.total_bookmarks }} time{{ analytics.total_bookmarks|pluralize }}</span>
                         </div>
                     </div>
                 </div>
+
+                <!-- Content Performance Section -->
+                {% if is_own_profile and uploads %}
+                <div class="performance-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Top Performing Content
+                    </h3>
+                    <div class="performance-list">
+                        {% for item in uploads|slice:":5" %}
+                        <div class="performance-item">
+                            <div class="performance-content">
+                                <h4 class="performance-title">{{ item.name|truncatechars:40 }}</h4>
+                                <div class="performance-stats">
+                                    <span class="stat">
+                                        <i class="fas fa-download"></i>
+                                        {{ item.download_count }} downloads
+                                    </span>
+                                    <span class="stat">
+                                        <i class="fas fa-star"></i>
+                                        {{ item.rate }} rating
+                                    </span>
+                                    <span class="stat">
+                                        <i class="fas fa-calendar"></i>
+                                        {{ item.date|date:"M d" }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="performance-chart">
+                                <!-- Simple visual representation -->
+                                <div class="chart-bar" style="height: {{ item.download_count|floatformat:0 }}px; max-height: 60px;"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -364,9 +589,70 @@
 
                 // Add active class to clicked tab and corresponding content
                 this.classList.add('active');
-                document.getElementById(targetTab).classList.add('active');
+                const targetContent = document.getElementById(targetTab);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
             });
         });
+
+        // Follow/Unfollow AJAX functionality
+        const followBtn = document.querySelector('.follow-btn');
+        if (followBtn) {
+            followBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const userId = this.getAttribute('data-user-id');
+                const form = this.closest('form');
+                const formData = new FormData(form);
+                
+                // Add loading state
+                this.disabled = true;
+                const originalText = this.querySelector('.follow-text').textContent;
+                this.querySelector('.follow-text').textContent = 'Loading...';
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update button appearance
+                        const icon = this.querySelector('i');
+                        const text = this.querySelector('.follow-text');
+                        
+                        if (data.is_following) {
+                            this.classList.remove('btn-primary');
+                            this.classList.add('btn-secondary');
+                            icon.className = 'fas fa-user-minus';
+                            text.textContent = 'Unfollow';
+                        } else {
+                            this.classList.remove('btn-secondary');
+                            this.classList.add('btn-primary');
+                            icon.className = 'fas fa-user-plus';
+                            text.textContent = 'Follow';
+                        }
+                        
+                        // Update followers count
+                        const followersCount = document.getElementById('followers-count');
+                        if (followersCount) {
+                            followersCount.textContent = data.followers_count;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    this.querySelector('.follow-text').textContent = originalText;
+                })
+                .finally(() => {
+                    this.disabled = false;
+                });
+            });
+        }
 
         // Search functionality for uploads
         const uploadSearch = document.getElementById('upload-search');
@@ -431,12 +717,28 @@
         document.querySelectorAll('.remove-bookmark').forEach(btn => {
             btn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to remove this bookmark?')) {
+                    const contentId = this.getAttribute('data-content-id');
                     const item = this.closest('.content-item');
-                    item.style.opacity = '0';
-                    item.style.transform = 'translateX(-100%)';
-                    setTimeout(() => {
-                        item.remove();
-                    }, 300);
+                    
+                    // Make AJAX request to remove bookmark
+                    fetch(`/bookmark/${contentId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        }
+                    })
+                    .then(() => {
+                        item.style.opacity = '0';
+                        item.style.transform = 'translateX(-100%)';
+                        setTimeout(() => {
+                            item.remove();
+                        }, 300);
+                    })
+                    .catch(error => {
+                        console.error('Error removing bookmark:', error);
+                        alert('Failed to remove bookmark. Please try again.');
+                    });
                 }
             });
         });
@@ -451,18 +753,6 @@
                         behavior: 'smooth',
                         block: 'start'
                     });
-                }
-            });
-        });
-
-        // Add loading states to buttons
-        document.querySelectorAll('.btn, .action-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (!this.classList.contains('no-loading')) {
-                    this.classList.add('loading');
-                    setTimeout(() => {
-                        this.classList.remove('loading');
-                    }, 1000);
                 }
             });
         });
@@ -491,6 +781,18 @@
         });
     });
 
+    // Function to record downloads
+    function recordDownload(contentId) {
+        fetch(`/increment-download/${contentId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+        .catch(error => console.error('Error recording download:', error));
+    }
+
     // Keyboard navigation for accessibility
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Tab') {
@@ -502,4 +804,438 @@
         document.body.classList.remove('keyboard-navigation');
     });
 </script>
+
+<!-- Enhanced styling for analytics and new features -->
+<style>
+.stat-link {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.3s ease;
+}
+
+.stat-link:hover {
+    color: var(--primary-color, #007bff);
+}
+
+.follow-btn {
+    transition: all 0.3s ease;
+    min-width: 120px;
+}
+
+.follow-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.follow-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+/* Quick Stats Grid */
+.quick-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.quick-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    transition: transform 0.3s ease;
+}
+
+.quick-stat:hover {
+    transform: translateY(-2px);
+}
+
+.quick-stat .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.quick-stat .stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.quick-stat .stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+}
+
+.quick-stat .stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+/* Enhanced Analytics Cards */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.analytics-card {
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.analytics-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.analytics-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.analytics-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.analytics-trend.positive {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+}
+
+.analytics-trend.negative {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.analytics-content h3 {
+    font-size: 1rem;
+    color: #6c757d;
+    margin: 0 0 0.5rem 0;
+    font-weight: 500;
+}
+
+.analytics-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 0.5rem 0;
+    line-height: 1;
+}
+
+.rating-scale {
+    font-size: 1rem;
+    color: #6c757d;
+    font-weight: 400;
+}
+
+.analytics-change {
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.analytics-change.positive {
+    color: #16a34a;
+}
+
+.analytics-change.negative {
+    color: #dc2626;
+}
+
+.analytics-description {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Performance Section */
+.performance-section {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.section-title i {
+    color: #007bff;
+}
+
+.performance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.performance-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.performance-item:hover {
+    background: #e9ecef;
+    transform: translateX(4px);
+}
+
+.performance-content {
+    flex: 1;
+}
+
+.performance-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 0.5rem 0;
+}
+
+.performance-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.performance-stats .stat {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.performance-stats .stat i {
+    font-size: 0.75rem;
+}
+
+.performance-chart {
+    display: flex;
+    align-items: end;
+    height: 60px;
+    width: 60px;
+}
+
+.chart-bar {
+    width: 100%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border-radius: 4px 4px 0 0;
+    min-height: 10px;
+    transition: height 0.3s ease;
+}
+
+/* Item Tags */
+.item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.tag {
+    background: #e9ecef;
+    color: #6c757d;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.tag:hover {
+    background: #007bff;
+    color: white;
+}
+
+/* Item Stats in Uploads */
+.item-stats {
+    display: flex;
+    gap: 1rem;
+    margin-left: 1rem;
+}
+
+.item-stats i {
+    font-size: 0.875rem;
+    margin-right: 0.25rem;
+}
+
+.item-author {
+    color: #007bff;
+    font-weight: 500;
+    margin-left: 1rem;
+}
+
+/* Tab Subtitle */
+.tab-subtitle {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .profile-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .follow-btn {
+        width: 100%;
+    }
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .analytics-number {
+        font-size: 2rem;
+    }
+
+    .quick-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .performance-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .performance-stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .performance-chart {
+        align-self: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .quick-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .performance-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .item-meta {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .item-stats,
+    .item-author {
+        margin-left: 0;
+        margin-top: 0.25rem;
+    }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loading {
+    animation: pulse 1s infinite;
+}
+
+/* Focus States for Accessibility */
+.keyboard-navigation .analytics-card:focus,
+.keyboard-navigation .quick-stat:focus,
+.keyboard-navigation .performance-item:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Custom Scrollbar for Performance Section */
+.performance-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.performance-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.performance-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.performance-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.performance-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+</style>
 {% endblock %}

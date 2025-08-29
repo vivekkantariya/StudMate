@@ -56,6 +56,12 @@ class Profile(models.Model):
     def __str__(self):
         return f"{self.user.username}'s Profile"
 
+    def followers_count(self):
+        return self.user.followers.count()
+    
+    def following_count(self):
+        return self.user.following.count()
+
 # Signal to automatically create Profile when User is created
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -66,6 +72,29 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     Profile.objects.get_or_create(user=instance)
     instance.profile.save()
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('follower', 'following')
+        indexes = [
+            models.Index(fields=['follower', 'created_at']),
+            models.Index(fields=['following', 'created_at']),
+        ]
+    
+    def clean(self):
+        if self.follower == self.following:
+            raise ValidationError("Users cannot follow themselves.")
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+        
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"
 
 class Bookmark(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmark')
@@ -113,3 +142,8 @@ class ContentReport(models.Model):
 
     def __str__(self):
         return f"Report by {self.reporter.username} on {self.content.name} - {self.reason}"
+
+class Download(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    content = models.ForeignKey(Content, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
