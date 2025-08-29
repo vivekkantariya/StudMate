@@ -96,7 +96,8 @@ import dj_database_url
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL')
+        default=os.environ.get('DATABASE_URL') or
+                f"postgres://postgres:root@localhost:5432/notenet"
     )
 }
 
