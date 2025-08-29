@@ -85,6 +85,29 @@ WSGI_APPLICATION = 'ResourceShare.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+import dj_database_url
+
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+else:
+    # Local development database
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'notenet',
+            'USER': 'postgres',
+            'PASSWORD': 'root',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
@@ -92,14 +115,12 @@ WSGI_APPLICATION = 'ResourceShare.wsgi.application'
 #     }
 # }
 
-import dj_database_url
-
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL') or
-                f"postgres://postgres:root@localhost:5432/notenet"
-    )
-}
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=os.environ.get('DATABASE_URL') or
+#                 f"postgres://postgres:root@localhost:5432/notenet"
+#     )
+# }
 
 # DATABASES = {
 #     'default': {
