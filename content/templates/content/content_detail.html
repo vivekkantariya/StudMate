@@ -36,8 +36,8 @@
 
             <div class="content-action-buttons">
                 {% if item.file %}
-                <a href="{{ item.file.url }}?download=1" class="btn btn-primary btn-lg btn-download" download>
-                    <i class="fas fa-download me-2"></i> Download
+                <a href="{{ item.file.url }}?download=1" class="btn btn-primary mt-3" download onclick="incrementDownload()">
+                    <i class="fas fa-download me-2"></i> Download Now
                 </a>
                 {% endif %}
                 <div class="btn-group" role="group">
@@ -195,33 +195,39 @@
                 </div>
                 <div class="author-stats">
                     <div class="stat-item">
-                        <div class="stat-value">{{ item.author.contents.count }}</div>
+                        <div class="stat-value">{{ resources_count|default:"0" }}</div>
                         <div class="stat-label">Resources</div>
                     </div>
+<div class="stat-item">
+  <div id="download-count" class="stat-value">{{ downloads|default:"0" }}</div>
+  <div class="stat-label">Downloads</div>
+</div>
                     <div class="stat-item">
-                        <div class="stat-value">{{ author_total_downloads|default:"0" }}</div>
-                        <div class="stat-label">Downloads</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">{{ following_count|default:"0" }}</div>
+                        <div class="stat-value">{{ followers_count|default:"0" }}</div>
                         <div class="stat-label">Followers</div>
                     </div>
                 </div>
+
                 <div class="author-actions">
-                    <a href="{% url 'profileview' user.id %}" class="btn btn-outline-primary w-100 mb-2">View Profile</a>
-                    {% if user.is_authenticated and user != item.author %}
-                    <form action="{% url 'toggle_follow' item.author.id %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-{% if is_following %}outline-{% endif %}primary w-100">
-                            {% if is_following %}
-                                <i class="fas fa-user-minus me-1"></i> Unfollow
-                            {% else %}
-                                <i class="fas fa-user-plus me-1"></i> Follow
-                            {% endif %}
-                        </button>
-                    </form>
-                    {% endif %}
-                </div>
+    <a href="{% url 'profileview' item.author.id %}" 
+       class="btn btn-outline-primary w-100 mb-2">
+        View Profile
+    </a>
+
+    {% if user.is_authenticated and user != item.author %}
+        <form action="{% url 'toggle_follow' item.author.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-{% if is_following %}outline-{% endif %}primary w-100">
+                {% if is_following %}
+                    <i class="fas fa-user-minus me-1"></i> Unfollow
+                {% else %}
+                    <i class="fas fa-user-plus me-1"></i> Follow
+                {% endif %}
+            </button>
+        </form>
+    {% endif %}
+</div>
+
             </div>
         </div>
 
@@ -507,17 +513,23 @@
             });
         }
     }
-
-    // Download counter
-    function incrementDownload() {
-        fetch("{% url 'increment_download' item.id %}", {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json',
-            },
-        }).catch(error => console.error('Error:', error));
-    }
+function incrementDownload() {
+    fetch("{% url 'increment_download' item.id %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // update the count dynamically
+            document.getElementById("download-count").innerText = data.download_count;
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
 
     // Rating functionality
     document.querySelectorAll(".star-option").forEach(star => {

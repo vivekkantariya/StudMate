@@ -152,8 +152,6 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # For production (when running collectstatic):
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -162,3 +160,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Media files (user uploaded files)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# production
+MEDIA_ROOT = BASE_DIR/'mediafiles'
+
+# Use Django's default static files storage instead of WhiteNoise
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}

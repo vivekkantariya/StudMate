@@ -1,5 +1,32 @@
-/media/
-/notes/
-``
+# media files (user uploads)
+mediafiles/
+
+# files collected with collectstatic
+staticfiles/
+
+#  cache
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.pdb
+*.pkl
+*.egg-info/
+
+# virtual environments
+venv/
+.env/
+.venv/
+env/
+
+# env variables
 .env
 *.env
+
+# SQLite database (if used locally)
+db.sqlite3
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp

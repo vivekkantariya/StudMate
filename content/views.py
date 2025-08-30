@@ -184,20 +184,29 @@ def content_list(request):
 
     return render(request, 'content/home.html', context)
 
-
-# Content detail
-def content_detail(request, pk):
+def content_detail(request, pk=0):
     item = get_object_or_404(Content, pk=pk)
+
+    # Fetch related resources
     related_resources = Content.objects.filter(
         Q(content_type=item.content_type) |
         Q(tags__icontains=item.tags.split(',')[0] if item.tags else '')
     ).exclude(pk=item.pk).distinct()[:5]
 
+    # Counts
+    resources_count = item.author.contents.count()
+    followers_count = item.author.followers.count()
+    following_count = item.author.following.count()
+    downloads = item.download_count  
+
     return render(request, 'content/content_detail.html', {
         'item': item,
-        'related_resources': related_resources
+        'related_resources': related_resources,
+        'resources_count': resources_count,
+        'followers_count': followers_count,
+        'following_count': following_count,
+        'downloads': downloads,   
     })
-
 
 # Create content
 def content_create(request):
@@ -220,17 +229,21 @@ def my_upload(request):
 
 
 # Profile views with dynamic analytics
-@login_required
-def profile_view(request, user_id):
+
+def profile_view(request, user_id=0):
     user_obj = get_object_or_404(User, id=user_id)
     profile = user_obj.profile
     uploads = Content.objects.filter(author=user_obj, is_public=True)
-    bookmarks = Bookmark.objects.filter(user=user_obj).select_related('content')
-    bookmarked_contents = [b.content for b in bookmarks if b.content.is_public]
-    for c in bookmarked_contents:
-        c.is_bookmarked = True
 
-    # Check if current user is following this user
+    # Bookmarks should only be visible to the owner
+    bookmarked_contents = []
+    if request.user.is_authenticated and request.user == user_obj:
+        bookmarks = Bookmark.objects.filter(user=user_obj).select_related('content')
+        bookmarked_contents = [b.content for b in bookmarks if b.content.is_public]
+        for c in bookmarked_contents:
+            c.is_bookmarked = True
+
+    # Check if current user follows this user
     is_following = False
     if request.user.is_authenticated and request.user != user_obj:
         is_following = Follow.objects.filter(
@@ -238,7 +251,7 @@ def profile_view(request, user_id):
             following=user_obj
         ).exists()
 
-    # Calculate dynamic analytics
+    # Analytics can still be shown, or you can restrict
     analytics = calculate_user_analytics(user_obj)
 
     context = {
@@ -246,14 +259,13 @@ def profile_view(request, user_id):
         'uploads': uploads,
         'bookmarks': bookmarked_contents,
         'is_following': is_following,
-        'is_own_profile': request.user == user_obj,
+        'is_own_profile': request.user == user_obj if request.user.is_authenticated else False,
         'followers_count': user_obj.followers.count(),
         'following_count': user_obj.following.count(),
         'analytics': analytics,
     }
 
     return render(request, 'profile/view.html', context)
-
 
 def calculate_user_analytics(user_obj):
     """
