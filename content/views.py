@@ -17,6 +17,9 @@ from django.utils import timezone
 from .forms import CustomUserForm, ContentForm, ProfileForm, ReportForm, ContentEditForm
 from .models import Content, Bookmark, Rating, ContentReport, Download, Follow
 
+from django.http import JsonResponse
+
+
 from django.db.models import Avg
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -80,7 +83,6 @@ def home(request):
 
     return render(request, 'content/home.html', context)
 
-
 # Registration
 def register(request):
     if request.method == "POST":
@@ -96,23 +98,23 @@ def register(request):
 
     return render(request, "registration/register.html", {"form": form})
 
-
 def logout_view(request):
     django_logout(request)
     return redirect('home')
 
-
-# Bookmark system
+# bookmark
 @login_required
 def bookmark(request, content_id):
-    content = get_object_or_404(Content, id=content_id)
-    bookmark, created = Bookmark.objects.get_or_create(user=request.user, content=content)
+    if request.method == "POST":
+        content = get_object_or_404(Content, id=content_id)
+        bookmark, created = Bookmark.objects.get_or_create(user=request.user, content=content)
 
-    if not created:
-        bookmark.delete()
+        if not created:
+            bookmark.delete()
+            return JsonResponse({"bookmarked": False})
+        return JsonResponse({"bookmarked": True})
 
-    return redirect(request.META.get('HTTP_REFERER', 'content_list'))
-
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 @login_required
 def bookmarked_contents(request):
@@ -121,7 +123,6 @@ def bookmarked_contents(request):
     for c in contents:
         c.is_bookmarked = True
     return render(request, 'content/my_bookmarks.html', {'contents': contents})
-
 
 # Content list view
 def content_list(request):
@@ -209,6 +210,7 @@ def content_detail(request, pk=0):
     })
 
 # Create content
+@login_required
 def content_create(request):
     if request.method == 'POST':
         form = ContentForm(request.POST, request.FILES)
@@ -369,7 +371,6 @@ def calculate_user_analytics(user_obj):
         'total_ratings': total_ratings,
         'total_bookmarks': total_bookmarks,
     }
-
 
 @login_required
 def profile_edit(request):
@@ -612,26 +613,38 @@ def update_content_rating(sender, instance, **kwargs):
     content.rate = round(avg_rating, 1)  # 1 decimal place
     content.save(update_fields=['rate'])
 
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 
 @login_required
 @require_POST
 def rate_content(request, content_id):
     content = get_object_or_404(Content, pk=content_id)
+
+    # Prevent multiple ratings
+    if Rating.objects.filter(user=request.user, content=content).exists():
+        return JsonResponse({"error": "You have already rated this content."}, status=400)
+
     try:
         score = int(request.POST.get('score'))
         if score < 1 or score > 5:
             raise ValueError
     except (ValueError, TypeError):
-        messages.error(request, "Invalid rating.")
-        return redirect('content_detail', pk=content_id)
+        return JsonResponse({"error": "Invalid rating."}, status=400)
 
-    Rating.objects.update_or_create(
-        user=request.user,
-        content=content,
-        defaults={'score': score}
-    )
-    messages.success(request, "Your rating has been submitted.")
-    return redirect('content_detail', pk=content_id)
+    Rating.objects.create(user=request.user, content=content, score=score)
+
+    # Recalculate average
+    avg_rating = content.ratings.aggregate(Avg("score"))["score__avg"] or 0
+    content.rate = avg_rating
+    content.save(update_fields=["rate"])
+
+    return JsonResponse({
+        "success": True,
+        "score": score,
+        "avg_rating": round(avg_rating, 1),
+        "ratings_count": content.ratings.count(),
+    })
 
 # views.py
 @login_required
@@ -650,7 +663,6 @@ def report_content(request, pk):
                 messages.warning(request, "You have already reported this content.")
             else:
                 messages.success(request, "Report submitted. Our moderators will review it.")
-            return redirect('content_detail', pk=pk)
     else:
         form = ReportForm()
 

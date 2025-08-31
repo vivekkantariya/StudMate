@@ -87,11 +87,11 @@
                     <span>Bookmarks</span>
                     <span class="nav-badge">{{ bookmarks|length }}</span>
                 </button>
-                {% endif %}
                 <button class="nav-tab" data-tab="activity">
                     <i class="fas fa-chart-line"></i>
                     <span>Analytics</span>
                 </button>
+                {% endif %}
             </nav>
         </div>
 
@@ -250,18 +250,9 @@
                                         <span class="stat-label">Ratings Received</span>
                                     </div>
                                 </div>
-                                <div class="quick-stat">
-                                    <div class="stat-icon">
-                                        <i class="fas fa-bookmark"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <span class="stat-number">{{ analytics.total_bookmarks }}</span>
-                                        <span class="stat-label">Times Bookmarked</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
-                    </div>
+                    </div>  
                 </div>
             </div>
 
@@ -420,7 +411,7 @@
             </div>
             {% endif %}
 
-            <!-- Analytics Tab -->
+            {% if is_own_profile %}
             <div class="tab-content" id="activity">
                 <div class="tab-header">
                     <h2>{% if is_own_profile %}My Analytics{% else %}{{ profile.user.username }}'s Analytics{% endif %}</h2>
@@ -527,7 +518,7 @@
                         <div class="analytics-content">
                             <h3>Times Bookmarked</h3>
                             <p class="analytics-number">{{ analytics.total_bookmarks }}</p>
-                            <span class="analytics-description">Your content was saved {{ analytics.total_bookmarks }} time{{ analytics.total_bookmarks|pluralize }}</span>
+                            <span class="analytics-description">Your content was saved {{ analytics.total_bookmarks }} time{{ analytics.total_bookmarks|pluralize }}</span> 
                         </div>
                     </div>
                 </div>
@@ -569,6 +560,7 @@
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
 </div>

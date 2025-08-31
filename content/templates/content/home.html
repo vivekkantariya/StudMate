@@ -24,9 +24,7 @@
       </div>
 
       <div class="hero-visual">
-        <img src="{% static 'images/heroimg.svg' %}" 
-             alt="Learning collaboration illustration" 
-             class="hero-svg">
+        <img src="{% static 'images/heroimg.svg' %}" alt="Learning collaboration illustration" class="hero-svg">
       </div>
     </div>
   </div>
@@ -188,18 +186,16 @@
           </div>
 
           {% if request.user.is_authenticated %}
-          <form action="{% url 'toggle_bookmark' item.id %}" method="post" class="bookmark-form">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-bookmark"
-              title="{% if item.is_bookmarked %}Unbookmark{% else %}Bookmark{% endif %}">
-              {% if item.is_bookmarked %}
-              <i class="fas fa-bookmark"></i>
-              {% else %}
-              <i class="far fa-bookmark"></i>
-              {% endif %}
-            </button>
-          </form>
+          <button type="button" class="btn btn-sm btn-bookmark" data-id="{{ item.id }}"
+            title="{% if item.is_bookmarked %}Unbookmark{% else %}Bookmark{% endif %}">
+            {% if item.is_bookmarked %}
+            <i class="fas fa-bookmark"></i>
+            {% else %}
+            <i class="far fa-bookmark"></i>
+            {% endif %}
+          </button>
           {% endif %}
+
         </div>
 
         {% if request.user.is_authenticated and request.user == item.author %}
@@ -345,6 +341,35 @@
 </section>
 
 <script>
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".btn-bookmark").forEach(button => {
+      button.addEventListener("click", () => {
+        const contentId = button.getAttribute("data-id");
+
+        fetch(`/bookmark/${contentId}/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "X-Requested-With": "XMLHttpRequest"
+          }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.bookmarked === true) {
+              button.innerHTML = `<i class="fas fa-bookmark"></i>`;
+              button.title = "Unbookmark";
+            } else if (data.bookmarked === false) {
+              button.innerHTML = `<i class="far fa-bookmark"></i>`;
+              button.title = "Bookmark";
+            }
+          })
+          .catch(err => console.error("Bookmark error:", err));
+      });
+    });
+  });
+
+
   function resetFilters() {
     document.getElementById('allTypes').checked = true;
     document.getElementById('sortSelect').selectedIndex = 0;

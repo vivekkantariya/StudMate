@@ -1,10 +1,64 @@
 {% extends 'layout.html' %}
 
 {% block content %}
+<nav aria-label="breadcrumb" class="content-breadcrumbs">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'home' %}">Home</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <a href="{% url 'content_detail' content.pk %}">{{ content.name|truncatechars:30 }}</a>
+        </li>
+    </ol>
+    {{ content.get_content_type_display }}
+</nav>
+
+
 <h2>Report: {{ content.name }}</h2>
-<form method="post">
+<form method="post" onsubmit="showToast(); return true;">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit" class="btn btn-danger">Submit Report</button>
 </form>
+
+<!-- Toast container -->
+<div id="toast"></div>
+
+<style>
+    #toast {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 16px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+        z-index: 9999;
+    }
+
+    #toast.show {
+        opacity: 1;
+        visibility: visible;
+    }
+</style>
+
+<script>
+    // Auto-show Django messages as toast
+    {% if messages %}
+    {% for message in messages %}
+    (function () {
+        const toast = document.getElementById("toast");
+        toast.textContent = "{{ message }}";
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2000);
+    })();
+    {% endfor %}
+    {% endif %}
+</script>
+
 {% endblock %}

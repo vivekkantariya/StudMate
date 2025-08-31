@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'content',
-    'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -65,7 +64,7 @@ LOGOUT_URL = '/logout'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ["templates"],
+        'DIRS': [BASE_DIR / "templates"],  # Use BASE_DIR for absolute path
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -89,24 +88,23 @@ WSGI_APPLICATION = 'ResourceShare.wsgi.application'
 
 
 # if DB_LIVE in ["False", False]:
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # else:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.postgresql',
-#             'NAME': os.getenv("DB_NAME"),
-#             'USER': os.getenv("DB_USER"),
-#             'PASSWORD': os.getenv("DB_PASSWORD"),
-#             'HOST': os.getenv("DB_HOST"),
-#             'PORT': os.getenv("DB_PORT"),
-#         }
-#     }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'notenet0$default',
+        'USER': 'notenet0',
+        'PASSWORD': '@Ilovenotenet',
+        'HOST': 'notenet0.mysql.pythonanywhere-services.com',
+    }
+}
 
 
 # Password validation

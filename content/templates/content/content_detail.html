@@ -4,6 +4,32 @@
 
 <link rel="stylesheet" href="{% static 'css/contentdetail.css' %}">
 
+
+<style>
+    /* Toast container */
+    #toast {
+      visibility: hidden;
+      min-width: 200px;
+      margin-left: -100px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 12px;
+      position: fixed;
+      left: 50%;
+      bottom: 30px;
+      font-size: 16px;
+      opacity: 0;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    /* Show the toast */
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
 <div class="content-detail-container">
     <!-- Main Content Column -->
     <div class="content-main-column">
@@ -39,18 +65,22 @@
                 <a href="{{ item.file.url }}?download=1" class="btn btn-primary mt-3" download onclick="incrementDownload()">
                     <i class="fas fa-download me-2"></i> Download Now
                 </a>
+                <div id="toast">Download started...</div>
+
                 {% endif %}
                 <div class="btn-group" role="group">
                     <button class="btn btn-outline-secondary btn-share" onclick="shareContent()" title="Share">
                         <i class="fas fa-share-alt"></i>
                     </button>
                     {% if request.user.is_authenticated %}
-                    <form action="{% url 'toggle_bookmark' item.id %}" method="post" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-{% if is_bookmarked %}warning{% else %}secondary{% endif %} btn-bookmark" title="Bookmark">
-                            <i class="fas fa-bookmark"></i>
-                        </button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-bookmark" data-id="{{ item.id }}"
+                        title="{% if item.is_bookmarked %}Unbookmark{% else %}Bookmark{% endif %}">
+                        {% if item.is_bookmarked %}
+                        <i class="fas fa-bookmark"></i>
+                        {% else %}
+                        <i class="far fa-bookmark"></i>
+                        {% endif %}
+                    </button>
                     {% endif %}
                 </div>
             </div>
@@ -286,55 +316,65 @@
             </div>
         </div>
 
-        <!-- Rating Section -->
-        <div class="content-rating-card card p-3 shadow-sm rounded">
-            <h3 class="section-title mb-3">
-                <i class="fas fa-star me-2 text-warning"></i> Ratings & Reviews
-            </h3>
+       <!-- Rating Section -->
+<div class="content-rating-card card p-3 shadow-sm rounded">
+    <h3 class="section-title mb-3">
+        <i class="fas fa-star me-2 text-warning"></i> Ratings & Reviews
+    </h3>
 
-            <!-- Average Rating -->
-            <div class="rating-overview text-center mb-3">
-                <div class="rating-value display-6 fw-bold">
-                    {{ item.rate|default:"0"|floatformat:1 }}
-                </div>
-                <div class="rating-stars mb-1 text-warning">
+    <!-- Average Rating -->
+    <div class="rating-overview text-center mb-3">
+        <div class="rating-value display-6 fw-bold">
+            {{ item.rate|default:"0"|floatformat:1 }}
+        </div>
+        <div class="rating-stars mb-1 text-warning">
+            {% for i in "12345" %}
+                <i class="fas fa-star{% if i|add:0 <= item.rate|default:0 %}{% else %}-o{% endif %}"></i>
+            {% endfor %}
+        </div>
+        <div class="rating-count small text-muted">
+            Based on {{ item.ratings.count }} rating{{ item.ratings.count|pluralize }}
+        </div>
+    </div>
+
+    <!-- User Rating -->
+    {% if user.is_authenticated %}
+    <div class="user-rating-form text-center">
+        {% if user_rating %}
+            <!-- Show the user's rating in read-only mode -->
+            <div class="d-flex justify-content-center text-warning">
+                {% for i in "12345" %}
+                    <i class="fas fa-star{% if i|add:0 <= user_rating.score %} text-warning{% else %}-o{% endif %}"></i>
+                {% endfor %}
+            </div>
+            <small class="text-muted d-block mt-2">
+                You rated this {{ user_rating.score }} star{{ user_rating.score|pluralize }} (cannot rate again)
+            </small>
+        {% else %}
+            <!-- Show clickable stars if not rated yet -->
+            <form id="ratingForm" method="POST" action="{% url 'rate_content' item.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="score" id="ratingValue">
+                <div class="clickable-stars d-flex justify-content-center">
                     {% for i in "12345" %}
-                        <i class="fas fa-star{% if i|add:0 <= item.rate|default:0 %}{% else %}-o{% endif %}"></i>
+                        <i class="fas fa-star star-option" data-value="{{ i }}"></i>
                     {% endfor %}
                 </div>
-                <div class="rating-count small text-muted">
-                    Based on {{ item.ratings.count }} rating{{ item.ratings.count|pluralize }}
-                </div>
-            </div>
+            </form>
+            <small class="text-muted d-block mt-2" id="ratingFeedback" data-locked="false">
+                Click to rate this content
+            </small>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="login-to-rate text-center">
+        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-primary btn-sm">
+            Login to rate this content
+        </a>
+    </div>
+    {% endif %}
+</div>
 
-            <!-- User Rating -->
-            {% if user.is_authenticated %}
-            <div class="user-rating-form text-center">
-                <form id="ratingForm" method="POST" action="{% url 'rate_content' item.id %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="score" id="ratingValue">
-                    <div class="clickable-stars d-flex justify-content-center">
-                        {% for i in "12345" %}
-                        <i class="fas fa-star star-option{% if user_rating and i|add:0 <= user_rating.score %} text-warning{% endif %}" data-value="{{ i }}"></i>
-                        {% endfor %}
-                    </div>
-                </form>
-                <small class="text-muted d-block mt-2" id="ratingFeedback">
-                    {% if user_rating %}
-                        You rated this {{ user_rating.score }} star{{ user_rating.score|pluralize }}
-                    {% else %}
-                        Click to rate this content
-                    {% endif %}
-                </small>
-            </div>
-            {% else %}
-            <div class="login-to-rate text-center">
-                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-primary btn-sm">
-                    Login to rate this content
-                </a>
-            </div>
-            {% endif %}
-        </div>
 
         <!-- File Download Card -->
         {% if item.file %}
@@ -521,45 +561,86 @@ function incrementDownload() {
             'Content-Type': 'application/json',
         },
     })
+    const toast = document.getElementById("toast");
+    toast.classList.add("show");
+
+    // Hide after 1s
+    setTimeout(() => {
+    toast.classList.remove("show");
+    }, 1000)
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            // update the count dynamically
+            ("Downloading")
             document.getElementById("download-count").innerText = data.download_count;
         }
     })
     .catch(error => console.error('Error:', error));
 }
 
-    // Rating functionality
-    document.querySelectorAll(".star-option").forEach(star => {
-        star.addEventListener("click", function() {
-            let value = this.getAttribute("data-value");
-            document.getElementById("ratingValue").value = value;
+document.querySelectorAll(".star-option").forEach(star => {
+    star.addEventListener("click", function() {
+        let value = this.getAttribute("data-value");
 
-            // highlight stars
-            document.querySelectorAll(".star-option").forEach(s => {
-                s.classList.remove("text-warning");
-                if (s.getAttribute("data-value") <= value) {
-                    s.classList.add("text-warning");
-                }
-            });
+        // Stop if already rated (disable multiple attempts)
+        if (document.getElementById("ratingFeedback").dataset.locked === "true") {
+            alert("You have already rated this content.");
+            return;
+        }
 
-            // feedback
-            document.getElementById("ratingFeedback").innerText = `You rated ${value} star${value > 1 ? 's' : ''}`;
-
-            // auto-submit
-            document.getElementById("ratingForm").submit();
+        // Highlight stars immediately (optimistic UI)
+        document.querySelectorAll(".star-option").forEach(s => {
+            s.classList.remove("text-warning");
+            if (s.getAttribute("data-value") <= value) {
+                s.classList.add("text-warning");
+            }
         });
 
-        // Hover effect
-        star.addEventListener("mouseenter", function() {
-            let value = this.getAttribute("data-value");
-            document.querySelectorAll(".star-option").forEach(s => {
-                s.style.color = s.getAttribute("data-value") <= value ? "#ffc107" : "#ccc";
-            });
+        // feedback
+        document.getElementById("ratingFeedback").innerText =
+            `You rated ${value} star${value > 1 ? 's' : ''}`;
+        document.getElementById("ratingFeedback").dataset.locked = "true"; // lock after rating
+
+        // AJAX request
+        fetch("{% url 'rate_content' item.id %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "X-Requested-With": "XMLHttpRequest",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({ score: value })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // update average & count on page instantly
+                document.querySelector(".rating-value").innerText = data.avg_rating;
+                document.querySelector(".rating-count").innerText =
+                    `Based on ${data.ratings_count} rating${data.ratings_count !== 1 ? 's' : ''}`;
+            } else {
+                alert(data.error || "Something went wrong.");
+                // unlock if backend rejected (so they can retry only if allowed)
+                document.getElementById("ratingFeedback").dataset.locked = "true";
+            }
+        })
+        .catch(err => {
+            console.error("Rating error:", err);
+            document.getElementById("ratingFeedback").dataset.locked = "false"; // allow retry if network fails
         });
     });
+
+    // Hover effect (only if not locked)
+    star.addEventListener("mouseenter", function() {
+        if (document.getElementById("ratingFeedback").dataset.locked === "true") return;
+
+        let value = this.getAttribute("data-value");
+        document.querySelectorAll(".star-option").forEach(s => {
+            s.style.color = s.getAttribute("data-value") <= value ? "#ffc107" : "#ccc";
+        });
+    });
+});
+
 
     // Reset stars on mouse leave
     document.querySelector(".clickable-stars").addEventListener("mouseleave", function() {
@@ -567,6 +648,34 @@ function incrementDownload() {
             s.style.color = s.classList.contains("text-warning") ? "#ffc107" : "#ccc";
         });
     });
+
+    document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".btn-bookmark").forEach(button => {
+        button.addEventListener("click", () => {
+        const contentId = button.getAttribute("data-id");
+
+        fetch(`/bookmark/${contentId}/`, {
+            method: "POST",
+            headers: {
+            "X-CSRFToken": "{{ csrf_token }}", 
+            "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.bookmarked === true) {
+            button.innerHTML = `<i class="fas fa-bookmark"></i>`;
+            button.title = "Unbookmark";
+            } else if (data.bookmarked === false) {
+            button.innerHTML = `<i class="far fa-bookmark"></i>`;
+            button.title = "Bookmark";
+            }
+        })
+        .catch(err => console.error("Bookmark error:", err));
+        });
+    });
+    });
+
 </script>
 
 <!-- Enhanced CSS -->

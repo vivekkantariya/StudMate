@@ -148,3 +148,4 @@ class Download(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     content = models.ForeignKey(Content, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
+
