@@ -1,4 +1,4 @@
- /* CSS Variables */
+/* CSS Variables */
  :root {
    --primary-color: #2563eb;
    --primary-hover: #1d4ed8;
@@ -74,7 +74,7 @@
 
  .navbar-brand img {
    height: 32px;
-   margin-right: 0.5rem;
+   /* margin-right: 0.5rem; */
  }
 
  /* Search Container */
@@ -662,48 +662,89 @@
    color: var(--primary-hover);
  }
 
- /* Responsive Design */
- @media (max-width: 992px) {
-   .desktop-only {
-     display: none;
-   }
-
-   .mobile-only {
-     display: block;
-   }
-
-   .mobile-menu-btn {
-     display: flex;
-   }
-
-   .sidebar {
-     position: fixed;
-     left: 0;
-     top: var(--navbar-height);
-     height: calc(100vh - var(--navbar-height));
-     transform: translateX(-100%);
-     transition: transform 0.3s ease;
-     z-index: 999;
-     box-shadow: var(--shadow-lg);
-   }
-
-   .sidebar.show {
-     transform: translateX(0);
-   }
-
-   .main-content {
-     margin-left: 0;
-     padding: 1.5rem;
-   }
-
-   .search-container {
-     margin: 0 1rem;
-   }
-
-   .navbar-brand {
-     margin-right: 1rem;
-   }
+ /* Logo display settings */
+ .desktop-logo {
+   display: inline-block;
  }
+
+ .mobile-logo {
+   display: none;
+ }
+
+ /* Responsive Design */
+/* Mobile Layout Fix - Add these changes to your layout.css */
+
+/* Update the existing @media (max-width: 992px) section with these changes: */
+
+@media (max-width: 992px) {
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+    order: 1; /* Hamburger on the left */
+    margin-right: 0;
+    flex-shrink: 0;
+  }
+
+  /* Mobile navbar layout: hamburger - search - logo */
+  .navbar {
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+
+  .search-container {
+    order: 2; /* Search bar in the middle */
+    flex: 2; /* Give more space to search bar */
+    margin: 0;
+    max-width: none;
+  }
+
+  /* FIXED: Keep logo in navbar, not sidebar */
+  .navbar-brand.desktop-logo {
+    order: 3; /* Logo on the right */
+    margin-right: 0;
+    margin-left: auto;
+    flex-shrink: 0;
+    display: inline-block !important; /* Force display on mobile */
+    font-size: 1.1rem;
+  }
+
+  .navbar-brand.desktop-logo img {
+    height: 24px;
+  }
+
+  /* FIXED: Hide the mobile logo in sidebar completely */
+  .sidebar .mobile-logo,
+  .sidebar-actions .mobile-logo {
+    display: none !important;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: var(--navbar-height);
+    height: calc(100vh - var(--navbar-height));
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 999;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar.show {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 1.5rem;
+  }
+}
 
  @media (max-width: 768px) {
    .navbar {
@@ -712,15 +753,10 @@
 
    .navbar-brand {
      font-size: 1.25rem;
-     margin-right: 0.5rem;
    }
 
    .navbar-brand img {
      height: 28px;
-   }
-
-   .search-container {
-     margin: 0 0.5rem;
    }
 
    .search-bar input {
@@ -746,16 +782,26 @@
      display: none;
    }
 
-   .search-container {
-     margin: 0 0.25rem;
-   }
-
    .main-content {
      padding: 0.75rem;
    }
 
    .card {
      padding: 1rem;
+   }
+
+   .search-bar input {
+     font-size: 0.8rem;
+     padding: 0.5rem 1.75rem 0.5rem 1.75rem;
+   }
+
+   .search-icon {
+     left: 0.5rem;
+     font-size: 0.8rem;
+   }
+
+   .search-clear {
+     right: 0.5rem;
    }
  }
 
@@ -797,22 +843,58 @@
    }
  }
 
- /* Default: hide mobile logo, show desktop logo */
-.desktop-logo {
-    display: inline-block;
-}
-.mobile-logo {
-    display: none;
-}
+ /* Active sidebar menu item */
+ .sidebar-menu a.active {
+   background-color: #eff6ff;
+   color: var(--primary-color);
+   font-weight: 600;
+ }
 
-/* On small screens (mobile), hide navbar logo & show sidebar logo */
-@media (max-width: 992px) {
-    .desktop-logo {
-        display: none;
-    }
-    .mobile-logo {
-        display: block;
-        text-align: center;
-        margin: 1rem 0;
-    }
-}
+ /* Sidebar actions */
+ .sidebar-actions {
+   padding: 1rem;
+   border-top: 1px solid var(--border-color);
+ }
+
+ .sidebar-action-item {
+   display: flex;
+   align-items: center;
+   padding: 0.75rem 1rem;
+   color: var(--text-color);
+   text-decoration: none;
+   border-radius: 6px;
+   transition: all 0.2s ease;
+   font-weight: 500;
+   margin-bottom: 0.25rem;
+   background: none;
+   border: none;
+   width: 100%;
+   cursor: pointer;
+ }
+
+ .sidebar-action-item:hover {
+   background-color: #f1f5f9;
+   color: var(--text-color);
+   text-decoration: none;
+ }
+
+ .sidebar-action-item.primary {
+   background-color: var(--primary-color);
+   color: white;
+ }
+
+ .sidebar-action-item.primary:hover {
+   background-color: var(--primary-hover);
+   color: white;
+ }
+
+ .sidebar-action-item.logout-btn:hover {
+   background-color: #fef2f2;
+   color: var(--danger-color);
+ }
+
+ .sidebar-action-item i {
+   margin-right: 0.75rem;
+   width: 18px;
+   text-align: center;
+ }

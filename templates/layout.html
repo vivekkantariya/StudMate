@@ -118,9 +118,6 @@
 
             <!-- Mobile Actions -->
             <div class="sidebar-actions mobile-only">  
-                <a href="{% url 'home' %}" class="navbar-brand mobile-logo">
-        <img src="{% static 'images/logo.svg' %}" alt="Logo">
-    </a>         
                 {% if user.is_authenticated %}
                     <a href="{% url 'profileview' request.user.id %}" class="sidebar-action-item">
                         <i class="fas fa-user"></i>
@@ -277,28 +274,28 @@
                     </div>
                     <div class="dropdown-section">
                         <div class="section-header">Browse by Type</div>
-                        <a href="/content/?content_type=note" class="dropdown-item">
+                        <a href="/content/?content_type=note#resources" class="dropdown-item">
                             <i class="fas fa-sticky-note item-icon"></i>
                             <div class="item-content">
                                 <div class="item-title">Notes</div>
                                 <div class="item-subtitle">Study notes and summaries</div>
                             </div>
                         </a>
-                        <a href="/content/?content_type=prac" class="dropdown-item">
+                        <a href="/content/?content_type=prac#resources" class="dropdown-item">
                             <i class="fas fa-code item-icon"></i>
                             <div class="item-content">
                                 <div class="item-title">Practicals</div>
                                 <div class="item-subtitle">Lab exercises and code</div>
                             </div>
                         </a>
-                        <a href="/content/?content_type=ass" class="dropdown-item">
+                        <a href="/content/?content_type=ass#resources" class="dropdown-item">
                             <i class="fas fa-tasks item-icon"></i>
                             <div class="item-content">
                                 <div class="item-title">Assignments</div>
                                 <div class="item-subtitle">Homework and projects</div>
                             </div>
                         </a>
-                        <a href="/content/?content_type=project" class="dropdown-item">
+                        <a href="/content/?content_type=project#resources" class="dropdown-item">
                             <i class="fas fa-project-diagram item-icon"></i>
                             <div class="item-content">
                                 <div class="item-title">Projects</div>

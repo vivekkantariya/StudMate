@@ -68,7 +68,7 @@
     </div>
 
     <!-- Search and Filter Bar -->
-    <div class="search-filter-card">
+    <!-- <div class="search-filter-card">
       <form method="GET" action="">
         <div class="filter-controls">
           <button class="filter-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse"
@@ -77,7 +77,6 @@
           </button>
         </div>
 
-        <!-- Collapsible advanced filters -->
         <div class="collapse" id="filterCollapse">
           <div class="filter-options">
             <div class="filter-group">
@@ -108,9 +107,9 @@
                 <option value="name">Name A-Z</option>
               </select>
             </div>
-          </div>
+          </div> -->
 
-          <div class="filter-actions">
+          <!-- <div class="filter-actions">
             <a href="#" class="btn btn-outline-danger" onclick="resetFilters()">
               <i class="fas fa-times me-2"></i> Reset Filters
             </a>
@@ -120,7 +119,7 @@
           </div>
         </div>
       </form>
-    </div>
+    </div> -->
 
     <div class="resources-grid">
       {% for item in data %}
@@ -287,7 +286,7 @@
     </div>
 
     <div class="categories-grid">
-      <a href="?content_type=note" class="category-card">
+      <a href="?content_type=note#resources" class="category-card">
         <div class="category-icon note">
           <i class="fas fa-book"></i>
         </div>
@@ -295,7 +294,7 @@
         <p>{{ note_count }} resources</p>
       </a>
 
-      <a href="?content_type=ass" class="category-card">
+      <a href="?content_type=ass#resources" class="category-card">
         <div class="category-icon assignment">
           <i class="fas fa-tasks"></i>
         </div>
@@ -303,7 +302,7 @@
         <p>{{ assignment_count }} resources</p>
       </a>
 
-      <a href="?content_type=prac" class="category-card">
+      <a href="?content_type=prac#resources" class="category-card">
         <div class="category-icon practical">
           <i class="fas fa-flask"></i>
         </div>
@@ -311,7 +310,7 @@
         <p>{{ practical_count }} resources</p>
       </a>
 
-      <a href="?content_type=project" class="category-card">
+      <a href="?content_type=project#resources" class="category-card">
         <div class="category-icon project">
           <i class="fas fa-project-diagram"></i>
         </div>
