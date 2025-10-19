@@ -1,7 +1,6 @@
 from collections import Counter
 import re
 from datetime import datetime, timedelta
-
 from django.contrib import messages
 from django.contrib.auth import login, logout as django_logout
 from django.contrib.auth.decorators import login_required
@@ -9,18 +8,12 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db import models
 from django.db.models import Q, Sum, Count, Avg
-from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.utils import timezone
-
 from .forms import CustomUserForm, ContentForm, ProfileForm, ReportForm, ContentEditForm
 from .models import Content, Bookmark, Rating, ContentReport, Download, Follow
-
 from django.http import JsonResponse
-
-
-from django.db.models import Avg
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
@@ -116,6 +109,7 @@ def bookmark(request, content_id):
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
+# view bookmark
 @login_required
 def bookmarked_contents(request):
     bookmarks = Bookmark.objects.filter(user=request.user).select_related('content')
@@ -230,8 +224,6 @@ def my_upload(request):
     return render(request, 'content/myupload.html', {'data': data})
 
 
-# Profile views with dynamic analytics
-
 def profile_view(request, user_id=0):
     user_obj = get_object_or_404(User, id=user_id)
     profile = user_obj.profile
@@ -270,9 +262,6 @@ def profile_view(request, user_id=0):
     return render(request, 'profile/view.html', context)
 
 def calculate_user_analytics(user_obj):
-    """
-    Calculate dynamic analytics for a user based on actual database data
-    """
     # Get current date and 30 days ago for comparison
     now = timezone.now()
     thirty_days_ago = now - timedelta(days=30)
@@ -385,7 +374,6 @@ def profile_edit(request):
 
     return render(request, 'profile/edit.html', {'form': form})
 
-
 # Follow/Unfollow functionality
 @login_required
 @require_POST
@@ -439,7 +427,6 @@ def following_list(request, user_id):
     
     return render(request, 'profile/following_list.html', context)
 
-
 @login_required
 def followers_list(request, user_id):
     user_obj = get_object_or_404(User, id=user_id)
@@ -452,9 +439,6 @@ def followers_list(request, user_id):
     }
     
     return render(request, 'profile/followers_list.html', context)
-
-# views.py
-# Use this debug version temporarily to see what's happening:
 
 @login_required
 def content_edit(request, pk):
@@ -545,8 +529,7 @@ def content_delete(request, pk):
     messages.success(request, "Content deleted successfully.")
     return redirect('home')
 
-
-# ===== Search APIs =====
+# search
 def search_api(request):
     query = request.GET.get('q', '').strip()
     if not query:
@@ -614,7 +597,6 @@ def update_content_rating(sender, instance, **kwargs):
     content.save(update_fields=['rate'])
 
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
 
 @login_required
 @require_POST
@@ -681,9 +663,6 @@ def api_record_download(request, content_id):
 
 @require_POST
 def increment_download(request, content_id):
-    """
-    Increment download count and create download record
-    """
     content = get_object_or_404(Content, id=content_id)
     
     # Increment the download count
